@@ -24,7 +24,7 @@ func NewMachine(code []string) *Machine {
 	m.dataStack = new(stack.Stack)
 	m.returnAddrStack = new(stack.Stack)
 	m.programCounter = 0
-	m.labelMap = make(map[string]int)
+	// m.labelMap = make(map[string]int)
 	m.scopedVars = make(map[string]interface{})
 	// m.dispatchMap = make(map[string]func())
 	m.reload()
@@ -34,85 +34,89 @@ func NewMachine(code []string) *Machine {
 func (m *Machine) reload() {
 	labels, clearCode := cutLabelInCode(m.code)
 	m.code = clearCode
-	for _, v := range labels {
-		m.labelMap[v[0].(string)] = v[1].(int)
-	}
+	m.labelMap = labels
 	m.dispatchMap = map[string]func(args ...string){
-		"%": func(args ...string) {
-			m.push(m.pop().(int) % m.pop().(int))
+		"mod": func(args ...string) {
+			m.Push(m.Pop().(int) % m.Pop().(int))
 		},
-		"*": func(args ...string) {
-			m.push(m.pop().(int) * m.pop().(int))
+		"mul": func(args ...string) {
+			m.Push(m.Pop().(int) * m.Pop().(int))
 		},
-		"+": func(args ...string) {
-			m.push(m.pop().(int) + m.pop().(int))
+		"plus": func(args ...string) {
+			m.Push(m.Pop().(int) + m.Pop().(int))
 		},
-		"-": func(args ...string) {
-			m.push(m.pop().(int) - m.pop().(int))
+		"minus": func(args ...string) {
+			m.Push(m.Pop().(int) - m.Pop().(int))
 		},
-		"/": func(args ...string) {
-			m.push(m.pop().(int) / m.pop().(int))
+		"div": func(args ...string) {
+			m.Push(m.Pop().(int) / m.Pop().(int))
 		},
-		"==": func(args ...string) {
-			m.push(m.pop().(int) == m.pop().(int))
+		"equal": func(args ...string) {
+			m.Push(m.Pop().(int) == m.Pop().(int))
 		},
 		"num": func(args ...string) {
-			m.push(str2num(m.pop()))
+			m.Push(str2num(m.Pop()))
+		},
+		"int": func(args ...string) {
+			m.Push(str2int(m.Pop()))
+		},
+		"float": func(args ...string) {
+			m.Push(str2float(m.Pop()))
 		},
 		"bool": func(args ...string) {
-			dataText := strings.ToUpper(m.pop().(string))
-			m.push(dataText == "TRUE")
+			dataText := strings.ToUpper(m.Pop().(string))
+			m.Push(dataText == "TRUE")
 		},
 		"drop": func(args ...string) {
-			m.pop()
+			m.Pop()
 		},
 		"dup": func(args ...string) {
 			if len(args) == 0 {
-				m.dup(0)
+				m.Dup(0)
 			} else {
-				idx := str2num(args[0])
-				m.dup(idx)
+				idx := str2int(args[0])
+				m.Dup(idx)
 			}
 		},
 		"swap": func(args ...string) {
 			var idx int
-			top := m.pop().(int)
+			top := m.Pop().(int)
 			if len(args) == 0 {
 				idx = 1
-				m.dup(1 - 1) // => dup_1
+				m.Dup(1 - 1) // => dup_1
 			} else {
-				idx = str2num(args[0])
+				idx = str2int(args[0])
 				if idx == 0 {
 					return
 				}
-				m.dup(idx - 1)
+				m.Dup(idx - 1)
 			}
 			(*m.dataStack)[m.dataStack.Len()-idx] = top
 		},
 		"read": func(args ...string) {
 			var input string
 			fmt.Scanln(&input)
-			m.push(input)
+			m.Push(input)
 		},
 		"print": func(args ...string) {
-			fmt.Print(m.pop())
+			fmt.Print(m.Pop())
 		},
 		"println": func(args ...string) {
-			fmt.Println(m.pop())
+			fmt.Println(m.Pop())
 		},
 		"call": func(args ...string) {
 			m.returnAddrStack.Push(m.programCounter)
-			m.jump()
+			m.Jump()
 		},
 		"return": func(args ...string) {
-			addr := m.pop().(int)
+			addr := m.Pop().(int)
 			m.programCounter = addr
 		},
 		"exit": func(args ...string) {
 			if len(args) == 0 {
 				os.Exit(0)
 			} else {
-				retCode := str2num(args[0])
+				retCode := str2int(args[0])
 				os.Exit(retCode)
 			}
 		},
@@ -120,9 +124,9 @@ func (m *Machine) reload() {
 			if len(args) != 0 {
 				key := args[0]
 				if v, ok := m.scopedVars[key]; ok {
-					m.push(v)
+					m.Push(v)
 				} else {
-					m.push("0")
+					m.Push("0")
 				}
 			} else {
 				// ERROR CALL
@@ -131,47 +135,49 @@ func (m *Machine) reload() {
 		"store": func(args ...string) {
 			if len(args) == 0 {
 				key := args[0]
-				m.scopedVars[key] = m.pop()
+				m.scopedVars[key] = m.Pop()
 			} else {
 				// ERROR CALL
 			}
 		},
 		"jump": func(args ...string) {
-			m.jump()
+			m.Jump()
 		},
 	}
 }
 
-func (m *Machine) dup(idx int) {
-	m.push(m.top(idx))
+func (m *Machine) Dup(idx int) {
+	m.Push(m.Top(idx))
 }
 
-func (m *Machine) jump() interface{} {
-	jumpLabel := m.pop().(string)
-	if isStringType(jumpLabel) {
-		if addr, ok := m.labelMap[jumpLabel]; ok {
-			m.programCounter = addr
+func (m *Machine) Jump() {
+	if jumpLabel, ok := m.Pop().(string); ok {
+		if isStringType(jumpLabel) {
+			jumpLabel = strings.ToLower(jumpLabel[1 : len(jumpLabel)-1])
+			if addr, ok := m.labelMap[jumpLabel]; ok {
+				m.programCounter = addr
+			}
 		}
 	}
 	// Error("JMP address must be a valid label")
-	return nil
+	// return nil
 }
 
-func (m *Machine) pop() interface{} {
+func (m *Machine) Pop() interface{} {
 	if v, err := m.dataStack.Pop(); err == nil {
 		return v
 	} else {
 		// ERROR
 		fmt.Println(err)
-		return 0
 	}
+	return 0
 }
 
-func (m *Machine) push(v interface{}) {
+func (m *Machine) Push(v interface{}) {
 	m.dataStack.Push(v)
 }
 
-func (m *Machine) top(idx int) interface{} {
+func (m *Machine) Top(idx int) interface{} {
 	if idx < 0 || idx >= m.dataStack.Len() {
 		return "null"
 	}
@@ -183,7 +189,7 @@ func (m *Machine) Run() *Machine {
 		if m.programCounter < len(m.code) {
 			opt := m.code[m.programCounter]
 			m.programCounter++
-			m.dispatch(opt)
+			m.Dispatch(opt)
 		} else {
 			break
 		}
@@ -191,7 +197,8 @@ func (m *Machine) Run() *Machine {
 	return m
 }
 
-func (m *Machine) dispatch(opt string) {
+func (m *Machine) Dispatch(opt string) {
+	opt = strings.ToLower(opt)
 	tokenType, arg := GetTokenTypeName(opt)
 	switch tokenType {
 	case "Operator":
@@ -202,9 +209,9 @@ func (m *Machine) dispatch(opt string) {
 	case "Instruction_Args":
 		m.dispatchMap[opt](arg)
 	case "Number":
-		m.push(opt)
+		m.Push(opt)
 	case "String":
-		m.push(opt[1 : len(opt)-1])
+		m.Push(opt)
 	default:
 		// error
 		fmt.Printf("[ERROR] UNKNOW TOKEN: %s\n", opt)

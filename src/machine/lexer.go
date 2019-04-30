@@ -14,15 +14,15 @@ var lexerMap = [...]TokenLexer{
 	},
 	TokenLexer{
 		TypeName: "String",
-		Regex:    regexp.MustCompile("^(\"').+?\\1$"),
+		Regex:    stringRegex,
 	},
 	TokenLexer{
 		TypeName: "Operator",
-		Regex:    regexp.MustCompile("^[-+*\\/\\^|&]$"),
+		Regex:    regexp.MustCompile("^(mul|plus|minus|div|eql|equal|or|and|xor|not)$"),
 	},
 	TokenLexer{
 		TypeName: "Instruction",
-		Regex:    regexp.MustCompile("^(int|bool|if|jump|over|print|println|read|return|call)$"),
+		Regex:    regexp.MustCompile("^(int|float|num|bool|if|jump|over|print|println|read|return|call|dup|swap|exit)$"),
 	},
 	TokenLexer{
 		TypeName: "Instruction_Args",
