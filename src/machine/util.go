@@ -1,16 +1,27 @@
 package machine
 
 import (
-	"regexp"
 	"strconv"
 	"strings"
 )
 
-var labelRegex = regexp.MustCompile("^(.+?):(.+?)$")
-var labelHeadRegex = regexp.MustCompile("^(.+?):$")
-var stringRegex = regexp.MustCompile("^(\"|').+?(\"|')$")
-var zeroRegex = regexp.MustCompile("^0(.0+)?|.0+$")
-var numRegex = regexp.MustCompile("^(\\d)+(\\.\\d)?$")
+type label_body struct {
+	Value interface{}
+	Idx   int
+}
+
+func num2float(num interface{}) float64 {
+	if v, ok := num.(float64); ok {
+		return v
+	}
+	if v, ok := num.(int); ok {
+		return float64(v)
+	}
+	if v, ok := num.(string); ok {
+		return str2float(v)
+	}
+	return float64(0)
+}
 
 func str2num(str interface{}) interface{} {
 	if v, ok := str.(string); ok {
@@ -33,6 +44,9 @@ func integral(str string) string {
 }
 
 func str2int(str interface{}) int {
+	if v, ok := str.(int); ok {
+		return v
+	}
 	if v, ok := str.(string); ok {
 		intv := integral(v)
 		if num, err := strconv.Atoi(intv); err == nil {
@@ -42,10 +56,13 @@ func str2int(str interface{}) int {
 		return v
 	}
 	// error
-	return 0
+	return int(0)
 }
 
 func str2float(str interface{}) float64 {
+	if v, ok := str.(float64); ok {
+		return v
+	}
 	if v, ok := str.(string); ok {
 		if num, err := strconv.ParseFloat(v, 64); err == nil {
 			return num
@@ -93,9 +110,9 @@ func labelMerge(code []string) []string {
 	return ret
 }
 
-func cutLabelInCode(code []string) (map[string]int, []string) {
+func cutLabelInCode(code []string) (map[string]*label_body, []string) {
 	var clearCode []string
-	labels := make(map[string]int)
+	labels := make(map[string]*label_body)
 	// wash
 	code = washCode(code)
 	code = labelMerge(code)
@@ -103,7 +120,10 @@ func cutLabelInCode(code []string) (map[string]int, []string) {
 	for idx, line := range code {
 		if m := labelRegex.FindStringSubmatch(line); len(m) != 0 {
 			labelKey := strings.ToLower(m[1])
-			labels[labelKey] = idx
+			labels[labelKey] = &label_body{
+				Value: line,
+				Idx:   idx,
+			}
 			clearCode = append(clearCode, m[2])
 		} else {
 			clearCode = append(clearCode, line)

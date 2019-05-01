@@ -7,26 +7,36 @@ type TokenLexer struct {
 	Regex    *regexp.Regexp
 }
 
+var labelRegex = regexp.MustCompile("^(.+?):(.+?)$")
+var labelHeadRegex = regexp.MustCompile("^(.+?):$")
+var stringRegex = regexp.MustCompile("^(\"|').+?(\"|')$")
+var zeroRegex = regexp.MustCompile("^0(.0+)?|.0+$")
+var numRegex = regexp.MustCompile("^(-?\\d+)(\\.\\d)?$")
+
 var lexerMap = [...]TokenLexer{
 	TokenLexer{
 		TypeName: "Number",
-		Regex:    regexp.MustCompile("^\\d+(\\.\\d)?$"),
+		Regex:    regexp.MustCompile("^-?\\d+(\\.\\d)?$"),
 	},
 	TokenLexer{
 		TypeName: "String",
 		Regex:    stringRegex,
 	},
 	TokenLexer{
+		TypeName: "Label_Pointer",
+		Regex:    regexp.MustCompile("^&.+$"),
+	},
+	TokenLexer{
 		TypeName: "Operator",
-		Regex:    regexp.MustCompile("^(mul|plus|minus|div|eql|equal|or|and|xor|not)$"),
+		Regex:    regexp.MustCompile("^(mul|plus|minus|div|eql|equal|greater|less|or|and|xor|not)$"),
 	},
 	TokenLexer{
 		TypeName: "Instruction",
-		Regex:    regexp.MustCompile("^(int|float|num|bool|if|jump|over|print|println|read|return|call|dup|swap|exit)$"),
+		Regex:    regexp.MustCompile("^(null|int|float|num|bool|if|jump|over|print|println|read|return|call|dup|swap|exit|load|store)$"),
 	},
 	TokenLexer{
 		TypeName: "Instruction_Args",
-		Regex:    regexp.MustCompile("^(dup|swap|exit|load|store)_(\\d+)$"),
+		Regex:    regexp.MustCompile("^(dup|swap|exit)_(.+)$"),
 	},
 }
 

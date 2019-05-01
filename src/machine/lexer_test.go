@@ -14,6 +14,15 @@ func TestLexer_Base(t *testing.T) {
 		t.Errorf("Failed Lexer.base need %v but %v", needVar, name)
 	}
 
+	token = "-1"
+	needVar = "Number"
+	name, _ = GetTokenTypeName(token)
+	if name == needVar {
+		t.Log("Pass Lexer.base")
+	} else {
+		t.Errorf("Failed Lexer.base need %v but %v", needVar, name)
+	}
+
 	token = "'name'"
 	needVar = "String"
 	name, _ = GetTokenTypeName(token)
@@ -55,7 +64,7 @@ func TestLexer_InsWithArgs(t *testing.T) {
 	}
 
 	tokenHead = "load"
-	tokenTail = "100086"
+	tokenTail = "some_vars"
 	token = tokenHead + "_" + tokenTail
 	needVar = "Instruction_Args"
 	name, arg = GetTokenTypeName(token)
@@ -74,16 +83,5 @@ func TestLexer_Unknow(t *testing.T) {
 		t.Log("Pass Lexer.base")
 	} else {
 		t.Errorf("Failed Lexer.base need %v but %v", needVar, name)
-	}
-
-	// just support degitial args
-	tokenHead := "load"
-	tokenTail := "unknow_token"
-	token = tokenHead + "_" + tokenTail
-	name, _ = GetTokenTypeName(token)
-	if name == needVar {
-		t.Log("Pass Lexer[Instruction_Args]")
-	} else {
-		t.Errorf("Failed Lexer[Instruction_Args] need %v but %v", needVar, name)
 	}
 }

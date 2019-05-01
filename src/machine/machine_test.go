@@ -46,6 +46,19 @@ func TestMachine_Pop(t *testing.T) {
 	}
 }
 
+func TestMachine_Label(t *testing.T) {
+	needVar := 11
+	code := [...]string{"var1:", "null", "11", "int", "'var1'", "store", "'var1'", "load"}
+	m := NewMachine(code[:]).Run()
+
+	v, ok := m.Pop().(int)
+	if ok && v == needVar {
+		t.Log("Pass Machine.Label")
+	} else {
+		t.Errorf("Failed Machine.Label need %v but %v", needVar, v)
+	}
+}
+
 func TestMachine_Jump(t *testing.T) {
 	needVar := 1
 	code := [...]string{"1", "int", "'end'", "jump", "2", "int", "3", "int", "mul", "end:", "dup"}
@@ -70,5 +83,28 @@ func TestMachine_Dup(t *testing.T) {
 		t.Log("Pass Machine.Dup")
 	} else {
 		t.Errorf("Failed Machine.Dup need %v but %v", needVar, v)
+	}
+}
+
+func TestMachine_Func_CaLL_Return(t *testing.T) {
+	needVar := 1
+	code := [...]string{"-1", "num", "&abs", "call", "exit", "abs:", "dup", "0", "num", "greater", "&true_s", "&false_s", "if", "true_s:return", "false_s:-1", "num", "mul", "return"}
+	m := NewMachine(code[:]).Run()
+
+	v, ok := m.Pop().(int)
+	if ok && v == needVar {
+		t.Log("Pass Machine.Call")
+	} else {
+		t.Errorf("Failed Machine.Call need %v but %v", needVar, v)
+	}
+
+	code = [...]string{"1", "num", "&abs", "call", "exit", "abs:", "dup", "0", "num", "greater", "&true_s", "&false_s", "if", "true_s:return", "false_s:-1", "num", "mul", "return"}
+	m = NewMachine(code[:]).Run()
+
+	v, ok = m.Pop().(int)
+	if ok && v == needVar {
+		t.Log("Pass Machine.Call")
+	} else {
+		t.Errorf("Failed Machine.Call need %v but %v", needVar, v)
 	}
 }
