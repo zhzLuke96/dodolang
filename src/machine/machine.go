@@ -9,13 +9,14 @@ import (
 )
 
 type Machine struct {
-	code            []string
-	dataStack       *stack.Stack
-	returnAddrStack *stack.Stack
-	programCounter  int
-	labelMap        map[string]*label_body
-	dispatchMap     map[string]func(args ...string)
-	scopedVars      map[string]interface{}
+	code              []string
+	dataStack         *stack.Stack
+	returnAddrStack   *stack.Stack
+	garbageCollection *stack.Stack
+	programCounter    int
+	labelMap          map[string]*label_body
+	dispatchMap       map[string]func(args ...string)
+	scopedVars        map[string]interface{}
 }
 
 func NewMachine(code []string) *Machine {
@@ -23,9 +24,10 @@ func NewMachine(code []string) *Machine {
 	m.code = code
 	m.dataStack = new(stack.Stack)
 	m.returnAddrStack = new(stack.Stack)
+	m.garbageCollection = new(stack.Stack)
 	m.programCounter = 0
 	// m.labelMap = make(map[string]int)
-	// m.scopedVars = make(map[string]interface{})
+	m.scopedVars = make(map[string]interface{})
 	// m.dispatchMap = make(map[string]func())
 	m.reload()
 	return m
@@ -83,14 +85,14 @@ func (m *Machine) reload() {
 			m.Push(str2float(m.Pop()))
 		},
 		"bool": func(args ...string) {
-			dataText := strings.ToUpper(m.Pop().(string))
-			m.Push(dataText == "TRUE")
+			dataText := strings.ToLower(m.Pop().(string))
+			m.Push(dataText == "true")
 		},
 		"drop": func(args ...string) {
 			m.Pop()
 		},
 		"dup": func(args ...string) {
-			if len(args) == 0 {
+			if len(args[0]) == 0 {
 				m.Dup(0)
 			} else {
 				idx := str2int(args[0])
@@ -100,7 +102,7 @@ func (m *Machine) reload() {
 		"swap": func(args ...string) {
 			var idx int
 			top := m.Pop().(int)
-			if len(args) == 0 {
+			if len(args[0]) == 0 {
 				idx = 1
 				m.Dup(1 - 1) // => dup_1
 			} else {
@@ -113,15 +115,34 @@ func (m *Machine) reload() {
 			(*m.dataStack)[m.dataStack.Len()-idx] = top
 		},
 		"if": func(args ...string) {
-			falseStatement := m.Pop().(string)
-			trueStatement := m.Pop().(string)
+			// falseStatement := m.Pop().(string)
+			// trueStatement := m.Pop().(string)
 			condition := m.Pop().(bool)
-			if condition {
-				m.Push(trueStatement)
-			} else {
-				m.Push(falseStatement)
+			// if condition {
+			// 	m.Push(trueStatement)
+			// } else {
+			// 	m.Push(falseStatement)
+			// }
+			// m.Jump()
+			if !condition {
+				thenCount := 0
+				for {
+					opt := m.feedOpt()
+					if opt == "then" {
+						if thenCount == 0 {
+							break
+						} else {
+							thenCount--
+						}
+					}
+					if opt == "if" {
+						thenCount++
+					}
+				}
 			}
-			m.Jump()
+		},
+		"then": func(args ...string) {
+			return
 		},
 		"read": func(args ...string) {
 			var input string
@@ -136,13 +157,26 @@ func (m *Machine) reload() {
 		},
 		"call": func(args ...string) {
 			m.returnAddrStack.Push(m.programCounter)
+			m.garbageCollection.Push([...]string{})
 			m.Jump()
 		},
 		"return": func(args ...string) {
-			if addr, err := m.returnAddrStack.Pop(); err != nil {
-				fmt.Printf("[ERROR] return addr error")
-			} else {
+			if addr, err := m.returnAddrStack.Pop(); err == nil {
 				m.programCounter = addr.(int)
+
+				if vars, err := m.garbageCollection.Pop(); err == nil {
+					if varsArr, ok := vars.([]string); ok {
+						for _, vname := range varsArr {
+							delete(m.scopedVars, vname)
+						}
+					} else {
+						fmt.Printf("[ERROR] Garbage Collection take")
+					}
+				} else {
+					fmt.Printf("[ERROR] Garbage Collection")
+				}
+			} else {
+				fmt.Printf("[ERROR] return addr")
 			}
 		},
 		"exit": func(args ...string) {
@@ -154,29 +188,38 @@ func (m *Machine) reload() {
 			}
 		},
 		"load": func(args ...string) {
-			// if len(args) != 0 {
-			// 	key := args[0]
-			// 	if v, ok := m.scopedVars[key]; ok {
-			// 		m.Push(v)
-			// 	} else {
-			// 		m.Push("0")
-			// 	}
-			// } else {
-			// 	// ERROR CALL
-			// }
-			labelKey := m.Pop().(string)
-
-			m.Push(m.labelMap[labelKey].Value)
+			var key string
+			if len(args[0]) != 0 {
+				key = args[0]
+			} else {
+				// key for stack
+				key = m.Pop().(string)
+			}
+			if v, ok := m.scopedVars[key]; ok {
+				m.Push(v)
+			} else {
+				m.Push("undefined")
+			}
+			// labelKey := m.Pop().(string)
+			// m.Push(m.labelMap[labelKey].Value)
 		},
 		"store": func(args ...string) {
-			// if len(args) == 0 {
-			// 	key := args[0]
-			// 	m.scopedVars[key] = m.Pop()
-			// } else {
-			// 	// ERROR CALL
-			// }
-			labelKey := m.Pop().(string)
-			m.labelMap[labelKey].Value = m.Pop()
+			var key string
+			if len(args[0]) != 0 {
+				key = args[0]
+			} else {
+				// key for stack
+				key = m.Pop().(string)
+			}
+			m.scopedVars[key] = m.Pop()
+			// gc
+			if gsArr, err := m.garbageCollection.Pop(); err == nil {
+				if varsArr, ok := gsArr.([]string); ok {
+					m.garbageCollection.Push(append(varsArr, key))
+				}
+			}
+			// labelKey := m.Pop().(string)
+			// m.labelMap[labelKey].Value = m.Pop()
 		},
 		"jump": func(args ...string) {
 			m.Jump()
@@ -222,12 +265,16 @@ func (m *Machine) Top(idx int) interface{} {
 	return (*m.dataStack)[m.dataStack.Len()-1-idx]
 }
 
+func (m *Machine) feedOpt() string {
+	opt := m.code[m.programCounter]
+	m.programCounter++
+	return opt
+}
+
 func (m *Machine) Run() *Machine {
 	for {
 		if m.programCounter < len(m.code) {
-			opt := m.code[m.programCounter]
-			m.programCounter++
-			m.dispatch(opt)
+			m.dispatch(m.feedOpt())
 		} else {
 			break
 		}
@@ -237,7 +284,7 @@ func (m *Machine) Run() *Machine {
 
 func (m *Machine) dispatch(opt string) {
 	opt = strings.ToLower(opt)
-	tokenType, arg := GetTokenTypeName(opt)
+	tokenType, key, arg := GetTokenTypeName(opt)
 	switch tokenType {
 	case "Operator":
 		fallthrough
@@ -245,7 +292,7 @@ func (m *Machine) dispatch(opt string) {
 		// m.dispatchMap[opt]()
 		fallthrough
 	case "Instruction_Args":
-		m.dispatchMap[opt](arg)
+		m.dispatchMap[key](arg)
 	case "Label_Pointer":
 		m.Push(opt[1:])
 	case "Number":

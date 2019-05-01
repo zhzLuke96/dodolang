@@ -7,7 +7,7 @@ import (
 func TestLexer_Base(t *testing.T) {
 	token := "1"
 	needVar := "Number"
-	name, _ := GetTokenTypeName(token)
+	name, _, _ := GetTokenTypeName(token)
 	if name == needVar {
 		t.Log("Pass Lexer.base")
 	} else {
@@ -16,7 +16,7 @@ func TestLexer_Base(t *testing.T) {
 
 	token = "-1"
 	needVar = "Number"
-	name, _ = GetTokenTypeName(token)
+	name, _, _ = GetTokenTypeName(token)
 	if name == needVar {
 		t.Log("Pass Lexer.base")
 	} else {
@@ -25,7 +25,7 @@ func TestLexer_Base(t *testing.T) {
 
 	token = "'name'"
 	needVar = "String"
-	name, _ = GetTokenTypeName(token)
+	name, _, _ = GetTokenTypeName(token)
 	if name == needVar {
 		t.Log("Pass Lexer.base")
 	} else {
@@ -34,7 +34,7 @@ func TestLexer_Base(t *testing.T) {
 
 	token = "mul"
 	needVar = "Operator"
-	name, _ = GetTokenTypeName(token)
+	name, _, _ = GetTokenTypeName(token)
 	if name == needVar {
 		t.Log("Pass Lexer.base")
 	} else {
@@ -43,7 +43,7 @@ func TestLexer_Base(t *testing.T) {
 
 	token = "return"
 	needVar = "Instruction"
-	name, _ = GetTokenTypeName(token)
+	name, _, _ = GetTokenTypeName(token)
 	if name == needVar {
 		t.Log("Pass Lexer.base")
 	} else {
@@ -56,7 +56,7 @@ func TestLexer_InsWithArgs(t *testing.T) {
 	tokenTail := "5"
 	token := tokenHead + "_" + tokenTail
 	needVar := "Instruction_Args"
-	name, arg := GetTokenTypeName(token)
+	name, _, arg := GetTokenTypeName(token)
 	if name == needVar && arg == tokenTail {
 		t.Log("Pass Lexer[Instruction_Args]")
 	} else {
@@ -67,7 +67,7 @@ func TestLexer_InsWithArgs(t *testing.T) {
 	tokenTail = "some_vars"
 	token = tokenHead + "_" + tokenTail
 	needVar = "Instruction_Args"
-	name, arg = GetTokenTypeName(token)
+	name, _, arg = GetTokenTypeName(token)
 	if name == needVar && arg == tokenTail {
 		t.Log("Pass Lexer[Instruction_Args]")
 	} else {
@@ -78,7 +78,7 @@ func TestLexer_InsWithArgs(t *testing.T) {
 func TestLexer_Unknow(t *testing.T) {
 	token := "unknow_token"
 	needVar := "UNKNOW TOKEN"
-	name, _ := GetTokenTypeName(token)
+	name, _, _ := GetTokenTypeName(token)
 	if name == needVar {
 		t.Log("Pass Lexer.base")
 	} else {

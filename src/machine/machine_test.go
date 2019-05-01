@@ -12,7 +12,7 @@ func TestMachine_Run(t *testing.T) {
 	code := [...]string{"1", "num", "2", "num", "plus"}
 	m := NewMachine(code[:]).Run()
 
-	v, ok := m.Top(0).(int)
+	v, ok := m.Top(0).(float64)
 	if ok && v == 3 {
 		t.Log("Pass Machine.Run")
 	} else {
@@ -47,8 +47,8 @@ func TestMachine_Pop(t *testing.T) {
 }
 
 func TestMachine_Label(t *testing.T) {
-	needVar := 11
-	code := [...]string{"var1:", "null", "11", "int", "'var1'", "store", "'var1'", "load"}
+	needVar := 2
+	code := [...]string{"1", "num", "2", "num", "&end", "jump", "mul", "end:exit"}
 	m := NewMachine(code[:]).Run()
 
 	v, ok := m.Pop().(int)
@@ -61,7 +61,7 @@ func TestMachine_Label(t *testing.T) {
 
 func TestMachine_Jump(t *testing.T) {
 	needVar := 1
-	code := [...]string{"1", "int", "'end'", "jump", "2", "int", "3", "int", "mul", "end:", "dup"}
+	code := [...]string{"1", "int", "&end", "jump", "2", "int", "3", "int", "mul", "end:", "dup"}
 	m := NewMachine(code[:]).Run()
 
 	v, ok := m.Pop().(int)
@@ -86,9 +86,35 @@ func TestMachine_Dup(t *testing.T) {
 	}
 }
 
+func TestMachine_IfThen(t *testing.T) {
+	needVar := 1
+	code := [...]string{"'true'", "bool", "if", "1", "num", "exit", "then", "2", "num"}
+	m := NewMachine(code[:]).Run()
+
+	v, ok := m.Pop().(int)
+	if ok && v == needVar {
+		t.Log("Pass Machine.IfThen")
+	} else {
+		t.Errorf("Failed Machine.IfThen need %v but %v", needVar, v)
+	}
+}
+
+func TestMachine_Scoped(t *testing.T) {
+	needVar := 2
+	code := [...]string{"1", "num", "'var1'", "store", "2", "num", "'var1'", "load", "mul"}
+	m := NewMachine(code[:]).Run()
+
+	v, ok := m.Pop().(float64)
+	if ok && int(v) == needVar {
+		t.Log("Pass Machine.Scoped")
+	} else {
+		t.Errorf("Failed Machine.Scoped need %v but %v", needVar, v)
+	}
+}
+
 func TestMachine_Func_CaLL_Return(t *testing.T) {
 	needVar := 1
-	code := [...]string{"-1", "num", "&abs", "call", "exit", "abs:", "dup", "0", "num", "greater", "&true_s", "&false_s", "if", "true_s:return", "false_s:-1", "num", "mul", "return"}
+	code := [...]string{"-1", "num", "&abs", "call", "exit", "abs:", "dup", "0", "num", "less", "if", "num", "mul", "return", "then", "return"}
 	m := NewMachine(code[:]).Run()
 
 	v, ok := m.Pop().(int)
@@ -98,7 +124,7 @@ func TestMachine_Func_CaLL_Return(t *testing.T) {
 		t.Errorf("Failed Machine.Call need %v but %v", needVar, v)
 	}
 
-	code = [...]string{"1", "num", "&abs", "call", "exit", "abs:", "dup", "0", "num", "greater", "&true_s", "&false_s", "if", "true_s:return", "false_s:-1", "num", "mul", "return"}
+	code = [...]string{"1", "num", "&abs", "call", "exit", "abs:", "dup", "0", "num", "less", "if", "num", "mul", "return", "then", "return"}
 	m = NewMachine(code[:]).Run()
 
 	v, ok = m.Pop().(int)
@@ -106,5 +132,44 @@ func TestMachine_Func_CaLL_Return(t *testing.T) {
 		t.Log("Pass Machine.Call")
 	} else {
 		t.Errorf("Failed Machine.Call need %v but %v", needVar, v)
+	}
+}
+
+func TestMachine_GarbageCollection(t *testing.T) {
+	needVar := "undefined"
+	code := [...]string{"&main", "jump", "subproc:", "'Hello'", "store_var1", "return", "main:", "'subproc'", "call", "load_var1", "exit"}
+	m := NewMachine(code[:]).Run()
+
+	v, ok := m.Pop().(string)
+	if ok && v == needVar {
+		t.Log("Pass Machine.GarbageCollection")
+	} else {
+		t.Errorf("Failed Machine.GarbageCollection need %v but %v", needVar, v)
+	}
+}
+
+func TestMachine_GlobalVar(t *testing.T) {
+	needVar := 13
+	code := [...]string{"13", "int", "store_gvar1", "&main", "jump", "main:", "load_gvar1", "exit"}
+	m := NewMachine(code[:]).Run()
+
+	v, ok := m.Pop().(int)
+	if ok && v == needVar {
+		t.Log("Pass Machine.GlobalVar")
+	} else {
+		t.Errorf("Failed Machine.GlobalVar need %v but %v", needVar, v)
+	}
+}
+
+func TestMachine_Closure(t *testing.T) {
+	needVar := 13
+	code := [...]string{"&main", "jump", "subProc:", "&Cvar1", "load", "return", "main:", "13", "int", "&Cvar1", "store", "&subProc", "call", "exit"}
+	m := NewMachine(code[:]).Run()
+
+	v, ok := m.Pop().(int)
+	if ok && v == needVar {
+		t.Log("Pass Machine.Closure")
+	} else {
+		t.Errorf("Failed Machine.Closure need %v but %v", needVar, v)
 	}
 }

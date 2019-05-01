@@ -131,3 +131,14 @@ func cutLabelInCode(code []string) (map[string]*label_body, []string) {
 	}
 	return labels, clearCode
 }
+
+func clearCode(text string) string {
+	text = commentRegex.ReplaceAllString(text, "")
+	text = mulitEnterRegex.ReplaceAllString(text, "\n")
+	return text
+}
+
+func codeReader(code string) []string {
+	code = clearCode(code)
+	return exprRegex.FindAllString(code, -1)
+}

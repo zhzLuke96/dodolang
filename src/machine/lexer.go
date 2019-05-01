@@ -9,9 +9,12 @@ type TokenLexer struct {
 
 var labelRegex = regexp.MustCompile("^(.+?):(.+?)$")
 var labelHeadRegex = regexp.MustCompile("^(.+?):$")
-var stringRegex = regexp.MustCompile("^(\"|').+?(\"|')$")
+var stringRegex = regexp.MustCompile("^\"(.+?)\"$|^'(.+?)'$")
 var zeroRegex = regexp.MustCompile("^0(.0+)?|.0+$")
 var numRegex = regexp.MustCompile("^(-?\\d+)(\\.\\d)?$")
+var commentRegex = regexp.MustCompile("//.+")
+var mulitEnterRegex = regexp.MustCompile("\\n+")
+var exprRegex = regexp.MustCompile("\".*?[^\\\\\\s]\"|'.*?[^\\\\\\s]'|\"\"|''|[^\\s]+")
 
 var lexerMap = [...]TokenLexer{
 	TokenLexer{
@@ -24,7 +27,7 @@ var lexerMap = [...]TokenLexer{
 	},
 	TokenLexer{
 		TypeName: "Label_Pointer",
-		Regex:    regexp.MustCompile("^&.+$"),
+		Regex:    regexp.MustCompile("^&(.+)$"),
 	},
 	TokenLexer{
 		TypeName: "Operator",
@@ -32,23 +35,23 @@ var lexerMap = [...]TokenLexer{
 	},
 	TokenLexer{
 		TypeName: "Instruction",
-		Regex:    regexp.MustCompile("^(null|int|float|num|bool|if|jump|over|print|println|read|return|call|dup|swap|exit|load|store)$"),
+		Regex:    regexp.MustCompile("^(null|int|float|num|bool|if|then|jump|over|print|println|read|return|call|dup|swap|exit|load|store)$"),
 	},
 	TokenLexer{
 		TypeName: "Instruction_Args",
-		Regex:    regexp.MustCompile("^(dup|swap|exit)_(.+)$"),
+		Regex:    regexp.MustCompile("^(dup|swap|exit|load|store)_(.+)$"),
 	},
 }
 
-func GetTokenTypeName(token string) (name string, arg string) {
+func GetTokenTypeName(token string) (name, key, arg string) {
 	for _, tle := range lexerMap {
 		if tle.Regex.MatchString(token) {
 			match := tle.Regex.FindStringSubmatch(token)
 			if len(match) == 3 {
-				return tle.TypeName, match[2]
+				return tle.TypeName, match[1], match[2]
 			}
-			return tle.TypeName, ""
+			return tle.TypeName, match[1], ""
 		}
 	}
-	return "UNKNOW TOKEN", ""
+	return "UNKNOW TOKEN", "", ""
 }
