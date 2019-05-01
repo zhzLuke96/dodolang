@@ -50,7 +50,7 @@ func (m *Machine) reload() {
 	m.code = clearCode
 	m.labelMap = labels
 	m.dispatchMap = map[string]func(args ...string){
-		"null": func(args ...string) {
+		"nop": func(args ...string) {
 			return
 		},
 		"mul": func(args ...string) {
@@ -169,7 +169,7 @@ func (m *Machine) reload() {
 		},
 		"call": func(args ...string) {
 			m.returnAddrStack.Push(m.programCounter)
-			m.garbageCollection.Push([...]string{})
+			m.garbageCollection.Push(make([]string, 0))
 			m.Jump()
 		},
 		"return": func(args ...string) {
@@ -182,13 +182,13 @@ func (m *Machine) reload() {
 							delete(m.scopedVars, vname)
 						}
 					} else {
-						fmt.Printf("[ERROR] Garbage Collection take")
+						fmt.Printf("[ERROR] Garbage Collection take\n")
 					}
 				} else {
-					fmt.Printf("[ERROR] Garbage Collection")
+					fmt.Printf("[ERROR] Garbage Collection: %v\n", err)
 				}
 			} else {
-				fmt.Printf("[ERROR] return addr")
+				fmt.Printf("[ERROR] return addr: %v\n", err)
 			}
 		},
 		"exit": func(args ...string) {
@@ -236,6 +236,16 @@ func (m *Machine) reload() {
 		"jump": func(args ...string) {
 			m.Jump()
 		},
+		"log": func(args ...string) {
+			m.Log()
+		},
+	}
+}
+
+func (m *Machine) Log() {
+	fmt.Printf("==== Data Stack : ====\n")
+	for i, v := range *m.dataStack {
+		fmt.Println("i:", i, "v:", v)
 	}
 }
 
@@ -308,6 +318,23 @@ func (m *Machine) Eval(code string) *Machine {
 		}
 	}
 	return m.Run()
+}
+
+func (m *Machine) EvalProc(code string) *Machine {
+	codeLines := codeReader(code)
+	labels, clearCode := cutLabelInCode(codeLines)
+	lineMax := len(m.code)
+	for _, line := range clearCode {
+		m.code = append(m.code, line)
+	}
+	for k, v := range labels {
+		m.labelMap[k] = &label_body{
+			Value: v.Value,
+			Idx:   v.Idx + lineMax,
+		}
+	}
+	m.programCounter += len(clearCode)
+	return m
 }
 
 func (m *Machine) dispatch(opt string) {

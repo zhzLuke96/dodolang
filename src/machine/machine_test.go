@@ -48,7 +48,7 @@ func TestMachine_Pop(t *testing.T) {
 
 func TestMachine_Label(t *testing.T) {
 	needVar := 2
-	code := [...]string{"1", "num", "2", "num", "&end", "jump", "mul", "end:exit"}
+	code := [...]string{"1", "num", "2", "num", "&end", "jump", "mul", "end:nop"}
 	m := NewMachine(code[:]).Run()
 
 	v, ok := m.Pop().(int)
@@ -83,6 +83,35 @@ func TestMachine_Dup(t *testing.T) {
 		t.Log("Pass Machine.Dup")
 	} else {
 		t.Errorf("Failed Machine.Dup need %v but %v", needVar, v)
+	}
+}
+
+func TestMachine_Eval(t *testing.T) {
+	needVar := 2
+	code := [...]string{"1", "int", "dup"}
+	m := NewMachine(code[:]).Run()
+
+	m.Eval("plus")
+	v, ok := m.Pop().(float64)
+	if ok && int(v) == needVar {
+		t.Log("Pass Machine.Eval")
+	} else {
+		t.Errorf("Failed Machine.Eval need %v but %v", needVar, v)
+	}
+}
+
+func TestMachine_EvalProc(t *testing.T) {
+	needVar := 12 * 12
+	code := [...]string{"12", "int"}
+	m := NewMachine(code[:]).Run()
+
+	m.EvalProc("square: dup mul return")
+	m.Eval("&square call")
+	v, ok := m.Pop().(float64)
+	if ok && int(v) == needVar {
+		t.Log("Pass Machine.EvalProc")
+	} else {
+		t.Errorf("Failed Machine.EvalProc need %v but %v", needVar, v)
 	}
 }
 
@@ -137,7 +166,7 @@ func TestMachine_Func_CaLL_Return(t *testing.T) {
 
 func TestMachine_GarbageCollection(t *testing.T) {
 	needVar := "undefined"
-	code := [...]string{"&main", "jump", "subproc:", "'Hello'", "store_var1", "return", "main:", "'subproc'", "call", "load_var1", "exit"}
+	code := [...]string{"&main", "jump", "subproc:", "'Hello'", "store_var1", "return", "main:", "'subproc'", "call", "load_var1", "nop"}
 	m := NewMachine(code[:]).Run()
 
 	v, ok := m.Pop().(string)

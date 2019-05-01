@@ -35,7 +35,7 @@ var lexerMap = [...]TokenLexer{
 	},
 	TokenLexer{
 		TypeName: "Instruction",
-		Regex:    regexp.MustCompile("^(null|int|float|num|bool|if|then|jump|over|print|println|read|return|call|dup|swap|exit|load|store)$"),
+		Regex:    regexp.MustCompile("^(nop|int|float|num|bool|if|then|jump|log|over|print|println|read|return|call|dup|swap|exit|load|store)$"),
 	},
 	TokenLexer{
 		TypeName: "Instruction_Args",

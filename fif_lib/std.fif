@@ -1,0 +1,19 @@
+
+// abs (n - n)
+// 1 => 1
+// -1 => 1
+abs:
+    dup
+    0 num less
+    if
+        -1 num mul
+    then
+        null
+    return
+
+// square (n - n*n)
+square:
+    dup mul
+    return
+
+

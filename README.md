@@ -4,6 +4,26 @@
 # Program <==> Data
 > Program Is Data, Program Operating Data
 
+# build
+```
+bash build.sh
+```
+
+# Usage
+```
+Hit CTRL+C or type "exit" or "quit" to quit.
+>>> "hello world"
+>>> print
+hello world
+>>>
+```
+
+```
+>>> square: dup mul return
+>>> 12 num
+>>> &square call print
+144
+```
 
 # fif-code
 ```
@@ -24,7 +44,7 @@ func_end
 ```js
 var count = 0
 
-func inner_fib(a,b){
+func fib(a,b){
     var temp = a + b
     a = b
     b = temp
@@ -33,9 +53,9 @@ func inner_fib(a,b){
     if(count == 10){
         return
     }
-    inner_fib(a,b)
+    fib(a,b)
 }
-inner_fib(1,1)
+fib(1,1)
 ```
 
 # LICENSE
