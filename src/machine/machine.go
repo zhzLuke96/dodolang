@@ -33,6 +33,18 @@ func NewMachine(code []string) *Machine {
 	return m
 }
 
+func NewMachineFromCode(code string) *Machine {
+	m := new(Machine)
+	m.code = codeReader(code)
+	m.dataStack = new(stack.Stack)
+	m.returnAddrStack = new(stack.Stack)
+	m.garbageCollection = new(stack.Stack)
+	m.programCounter = 0
+	m.scopedVars = make(map[string]interface{})
+	m.reload()
+	return m
+}
+
 func (m *Machine) reload() {
 	labels, clearCode := cutLabelInCode(m.code)
 	m.code = clearCode
@@ -280,6 +292,22 @@ func (m *Machine) Run() *Machine {
 		}
 	}
 	return m
+}
+
+func (m *Machine) Eval(code string) *Machine {
+	codeLines := codeReader(code)
+	labels, clearCode := cutLabelInCode(codeLines)
+	lineMax := len(m.code)
+	for _, line := range clearCode {
+		m.code = append(m.code, line)
+	}
+	for k, v := range labels {
+		m.labelMap[k] = &label_body{
+			Value: v.Value,
+			Idx:   v.Idx + lineMax,
+		}
+	}
+	return m.Run()
 }
 
 func (m *Machine) dispatch(opt string) {

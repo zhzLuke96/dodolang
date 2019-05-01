@@ -14,7 +14,7 @@ var zeroRegex = regexp.MustCompile("^0(.0+)?|.0+$")
 var numRegex = regexp.MustCompile("^(-?\\d+)(\\.\\d)?$")
 var commentRegex = regexp.MustCompile("//.+")
 var mulitEnterRegex = regexp.MustCompile("\\n+")
-var exprRegex = regexp.MustCompile("\".*?[^\\\\\\s]\"|'.*?[^\\\\\\s]'|\"\"|''|[^\\s]+")
+var exprRegex = regexp.MustCompile("\".*?[^\\\\]\"|'.*?[^\\\\]'|\"\"|''|[^\\s]+")
 
 var lexerMap = [...]TokenLexer{
 	TokenLexer{
