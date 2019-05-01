@@ -31,7 +31,7 @@ var lexerMap = [...]TokenLexer{
 	},
 	TokenLexer{
 		TypeName: "Operator",
-		Regex:    regexp.MustCompile("^(mul|plus|minus|div|eql|equal|greater|less|or|and|xor|not)$"),
+		Regex:    regexp.MustCompile("^(mul|plus|sub|div|eql|equal|greater|less|or|and|xor|not)$"),
 	},
 	TokenLexer{
 		TypeName: "Instruction",

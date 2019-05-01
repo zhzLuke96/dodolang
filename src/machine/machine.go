@@ -217,17 +217,21 @@ func (m *Machine) reload() {
 		},
 		"store": func(args ...string) {
 			var key string
+			var varInit bool
 			if len(args[0]) != 0 {
 				key = args[0]
 			} else {
 				// key for stack
 				key = m.Pop().(string)
 			}
+			_, varInit = m.scopedVars[key]
 			m.scopedVars[key] = m.Pop()
 			// gc
-			if gsArr, err := m.garbageCollection.Pop(); err == nil {
-				if varsArr, ok := gsArr.([]string); ok {
-					m.garbageCollection.Push(append(varsArr, key))
+			if varInit {
+				if gsArr, err := m.garbageCollection.Pop(); err == nil {
+					if varsArr, ok := gsArr.([]string); ok {
+						m.garbageCollection.Push(append(varsArr, key))
+					}
 				}
 			}
 			// labelKey := m.Pop().(string)

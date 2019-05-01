@@ -27,17 +27,15 @@ hello world
 
 # fif-code
 ```
-0 store_1
-1 store_2
-1 store_3
-func fib
-load_3 println
-load_2 load_3 +
-load_3 store_2 store_3
-load_1 1 + dup store_1
-10 == "end" true_jump return
-end:"fib" call
-func_end
+10 store_var1
+1 store_var2
+1 store_var3
+fib:
+load_var3 println
+load_var2 load_var3 plus
+load_var3 store_var2 store_var3
+load_var1 1 sub dup store_var1
+0 greater if &fib call return then return
 ```
 
 # fifth
