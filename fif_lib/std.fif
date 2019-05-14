@@ -2,18 +2,44 @@
 // abs (n - n)
 // 1 => 1
 // -1 => 1
-abs:
-    dup
-    0 num less
-    if
-        -1 num mul
-    then
-        null
-    return
+"abs" func
+    dup 0 &neg lsjmp ret
+    neg:
+        0 swap sub ret
+endfunc store
 
 // square (n - n*n)
-square:
-    dup mul
-    return
+"square" func
+    dup mul ret
+endfunc store
 
+"strEqul" func
+	"stra" arg "strb" arg
+	"stra" load len
+	"strb" load len &n1 equljmp 0 ret
+	n1:
+	    "count" 0 store
+	loop:
+        "count" load "stra" load len &loopend equljmp
+        "stra" load "count" load char
+        "strb" load "count" load char
+        "count" load 1 add "count" swap store
+        &false nequljmp &loop jmp
+	loopend:
+	    1 ret
+	false:
+        0 ret
+endfunc store
 
+"newMap" func 
+	func 
+		"val" arg "key" arg "opt" arg
+		"opt" load "get" strEqul 0 &set equljmp
+		"key" load load ret
+		set:
+		"opt" load "set" strEqul 0 &end equljmp
+		"key" load "val" load stores
+		end: ret
+	endfunc
+	ret 
+endfunc store
