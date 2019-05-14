@@ -1,0 +1,14 @@
+
+
+sum = func (a,b){
+    return a+b 
+}
+
+main = func (){
+    a = 10
+    b = 8
+    res = sum (a,b)
+    print (res)
+}
+
+main ()
