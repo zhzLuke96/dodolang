@@ -13,3 +13,7 @@
 
 # build file
 *.o
+
+# goyacc
+fif_parser.go
+*.output

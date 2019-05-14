@@ -265,12 +265,23 @@ func (r *Runner) _call(fn Program) {
 }
 
 func (r *Runner) call() {
-	arg := r.pop()
-	if fnName, ok := arg.(string); ok {
+	nameOrFn := r.pop()
+	if fnName, ok := nameOrFn.(string); ok {
+		switch fnName {
+		case "print":
+			r.print()
+			return
+		case "println":
+			r.println()
+			return
+		case "len":
+			r.len()
+			return
+		}
 		if fn, ok := r.CurProgram().Env.get(fnName); ok {
 			r._call(fn.(Program))
 		}
-	} else if fn, ok := arg.(Program); ok {
+	} else if fn, ok := nameOrFn.(Program); ok {
 		r._call(fn)
 	}
 }
