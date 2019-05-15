@@ -2,6 +2,16 @@
 package main
 
 import "fmt"
+import "strings"
+
+var fif_code_buf = []string{}
+
+func reverse(s []string) []string {
+	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
+		s[i], s[j] = s[j], s[i]
+	}
+	return s
+}
 
 %}
 
@@ -9,22 +19,24 @@ import "fmt"
 	val interface{}
 }
 
+%type <val> any_T
+
 %token LexError
 %token <val> Identifier StringConstant NumConstant
 %token <val> FuncDefined FuncReturn
+%token <val> T_IF T_ELSE T_FOR T_WHILE T_FIF
 
+%left '='
 %left '|'
 %left '&'
 %left '+'  '-'
 %left '*'  '/'  '%'
 %right UMINUS
-%left '='
 
 %%
 
 code:
 		/* empty */
-	|	code func_def
 	|	code S
 	;
 
@@ -40,9 +52,15 @@ stmts:  /* empty */
 stmt:	assignStmt
 	|	callStmt
 	|	retStmt
+	|	named_func_def
+	|	fif_code
 	;
 
-assignStmt:	Identifier '=' expr		{ fmt.Printf("'%v' swap store ", $1) }
+assignStmt:	assignId '=' expr		{ fmt.Printf("store ") }
+	;
+
+assignId:
+		Identifier					{ fmt.Printf("'%v' ", $1) }
 	;
 
 callStmt:
@@ -59,6 +77,7 @@ expr:   '(' expr ')'                { /* empty */ }
 	|   expr '%' expr               { fmt.Print("mod ") }
 	|   Identifier					{ fmt.Printf("'%v' load ", $1) }
 	|	NumConstant					{ fmt.Printf("%v ", $1) }
+	|   '-' NumConstant %prec UMINUS{ fmt.Printf("-%v ",$2) }
 	|	StringConstant				{ fmt.Printf("'%v' ", $1) }
 	| 	callExpr          			{ /* empty */ }
 	|	func_def					{ /* empty */ }
@@ -76,6 +95,15 @@ call_args:
 call_arg:
 		/* empty */					{ /* empty */ }
 	|	call_arg ',' expr			{ /* empty */ }
+	;
+
+named_func_def:
+		named_func_h '(' func_args ')' '{' func_body '}'
+									{ fmt.Printf("endfunc store ") }
+	;
+
+named_func_h:
+		FuncDefined Identifier		{ fmt.Printf("'%v' func ",$2) }
 	;
 
 func_def:
@@ -104,4 +132,24 @@ func_body:
 retStmt:
 		FuncReturn					{ fmt.Printf("ret ") }
 	|	FuncReturn expr				{ fmt.Printf("ret ") }
+	;
+
+fif_code:
+		T_FIF '{' fif_block '}'		{
+										fmt.Printf("%v ",
+											strings.Join(
+												reverse(fif_code_buf), " "))
+										fif_code_buf = []string{}
+									}
+	;
+
+fif_block:
+		/* empty */					
+	|	any_T fif_block				{ fif_code_buf = append(fif_code_buf,$1.(string)) }
+	;
+
+any_T:
+		Identifier					{ $$ = $1.(string) }
+	|	StringConstant				{ $$ = "'" + $1.(string) + "'" }
+	|	NumConstant					{ $$ = $1.(string) }
 	;

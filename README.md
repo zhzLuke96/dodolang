@@ -9,7 +9,32 @@
 bash build.sh
 ```
 
-# Usage
+# fifth
+```go
+func print(text){
+    __fifcode__ {
+        'text' load print
+    }
+    return
+}
+
+func sum(a,b){
+    return a+b 
+}
+
+func main(){
+    a = 10
+    b = -8.5
+    res = sum(a,b)
+    print(res)
+}
+
+main()
+```
+
+# fif-code
+
+### Usage
 ```
 Hit CTRL+C or type "exit" or "quit" to quit.
 >>> "hello world"
@@ -23,8 +48,6 @@ hello world
 >>> 12 square print
 144
 ```
-
-# fif-code
 
 ### Closure
 ```
@@ -99,25 +122,6 @@ endfunc store
 endfunc store
 
 "main" call
-```
-# fifth
-> come soon
-
-```js
-count = 0
-
-func fib(a,b){
-    temp = a + b
-    a = b
-    b = temp
-    print(a)
-    count = count + 1
-    if(count == 10){
-        return
-    }
-    fib(a,b)
-}
-fib(1,1)
 ```
 
 # LICENSE

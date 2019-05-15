@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"errors"
+	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
@@ -17,10 +19,11 @@ func Parse(input []byte) error {
 }
 
 type lex struct {
-	input  []byte
-	pos    int
-	result map[string]interface{}
-	err    error
+	input   []byte
+	pos     int
+	linepos int
+	line    int
+	err     error
 }
 
 func newLex(input []byte) *lex {
@@ -34,9 +37,15 @@ func (l *lex) Lex(lval *FifSymType) int {
 	return l.scanNormal(lval)
 }
 
+var idRegex = regexp.MustCompile("[[\\w\\$_]")
+
 func (l *lex) scanNormal(lval *FifSymType) int {
 	for b := l.next(); b != 0; b = l.next() {
 		switch {
+		case b == '\n':
+			l.line++
+			l.linepos = 0
+			continue
 		case unicode.IsSpace(rune(b)):
 			continue
 		case b == '"' || b == '\'':
@@ -44,7 +53,8 @@ func (l *lex) scanNormal(lval *FifSymType) int {
 		case unicode.IsDigit(rune(b)):
 			l.backup()
 			return l.scanNum(lval)
-		case unicode.IsLetter(rune(b)):
+		// case unicode.IsLetter(rune(b)):
+		case idRegex.Match([]byte{b}):
 			l.backup()
 			return l.scanIdentifier(lval)
 		default:
@@ -108,8 +118,13 @@ func (l *lex) scanNum(lval *FifSymType) int {
 }
 
 var reserved_words = map[string]int{
-	"func":   FuncDefined,
-	"return": FuncReturn,
+	"func":        FuncDefined,
+	"return":      FuncReturn,
+	"if":          T_IF,
+	"else":        T_ELSE,
+	"for":         T_FOR,
+	"while":       T_WHILE,
+	"__fifcode__": T_FIF,
 }
 
 func (l *lex) scanIdentifier(lval *FifSymType) int {
@@ -117,12 +132,14 @@ func (l *lex) scanIdentifier(lval *FifSymType) int {
 	for {
 		b := l.next()
 		switch {
-		case unicode.IsLetter(rune(b)):
+		case idRegex.Match([]byte{b}):
 			buf.WriteByte(b)
+		// case unicode.IsSpace(rune(b)):
 		default:
 			l.backup()
 			lval.val = buf.String()
 			if ty, ok := reserved_words[lval.val.(string)]; ok {
+				// fmt.Printf("\nty:[%v] [%v]\n", ty, lval.val.(string))
 				return ty
 			}
 			return Identifier
@@ -135,18 +152,22 @@ func (l *lex) backup() {
 		return
 	}
 	l.pos--
+	l.linepos--
 }
 
 func (l *lex) next() byte {
 	if l.pos >= len(l.input) || l.pos == -1 {
 		l.pos = -1
+		l.linepos = -1
 		return 0
 	}
 	l.pos++
+	l.linepos++
 	return l.input[l.pos-1]
 }
 
 // Error satisfies yyLexer.
 func (l *lex) Error(s string) {
 	l.err = errors.New(s)
+	fmt.Printf("\n[ERROR]:%v pos:[L:%v,P:%v] \n", s, l.line, l.linepos)
 }

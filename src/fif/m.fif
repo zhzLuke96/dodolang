@@ -1,12 +1,25 @@
 
+func print(text){
+    __fifcode__ {
+        'text' load print
+    }
+    return
+}
 
-sum = func (a,b){
+func len(val){
+    __fifcode__ {
+        'val' load len
+    }
+    return
+}
+
+func sum(a,b){
     return a+b 
 }
 
-main = func (){
+func main(){
     a = 10
-    b = 8
+    b = -8.5
     res = sum (a,b)
     print (res)
 }

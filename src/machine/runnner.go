@@ -267,17 +267,6 @@ func (r *Runner) _call(fn Program) {
 func (r *Runner) call() {
 	nameOrFn := r.pop()
 	if fnName, ok := nameOrFn.(string); ok {
-		switch fnName {
-		case "print":
-			r.print()
-			return
-		case "println":
-			r.println()
-			return
-		case "len":
-			r.len()
-			return
-		}
 		if fn, ok := r.CurProgram().Env.get(fnName); ok {
 			r._call(fn.(Program))
 		}
