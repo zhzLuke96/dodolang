@@ -5,6 +5,8 @@ import "fmt"
 import "strings"
 
 var fif_code_buf = []string{}
+var IF_Label = NewLabelStack()
+var WHILE_Label = NewLabelStack()
 
 func reverse(s []string) []string {
 	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
@@ -25,6 +27,7 @@ func reverse(s []string) []string {
 %token <val> Identifier StringConstant NumConstant
 %token <val> FuncDefined FuncReturn
 %token <val> T_IF T_ELSE T_FOR T_WHILE T_FIF
+%token <val> T_EQ T_AND T_OR
 
 %left '='
 %left '|'
@@ -52,6 +55,7 @@ stmts:  /* empty */
 stmt:	assignStmt
 	|	callStmt
 	|	retStmt
+	|	if_stmt
 	|	named_func_def
 	|	fif_code
 	;
@@ -67,6 +71,50 @@ callStmt:
 		callExpr
 	;
 
+if_stmt:
+		if_BEG fact_Expr if_THEN Stmts_Block then_END if_END
+	|	if_BEG fact_Expr if_THEN Stmts_Block then_END else_BEG Stmts_Block if_END
+	;
+
+if_BEG:
+		T_IF						{ IF_Label.BEG() }
+	;
+
+if_THEN:
+		/* empty */					{
+										fmt.Printf("&_THEN_END%v fjmp ", IF_Label.Topv())
+									}
+	;
+
+then_END:
+		/* empty */					{
+										fmt.Printf("&_IF_END%v jmp ", IF_Label.Topv())
+										fmt.Printf("_THEN_END%v: ", IF_Label.Topv())
+									}
+	;
+
+if_END:
+		/* empty */					{
+										fmt.Printf("_IF_END%v: ", IF_Label.Topv())
+									}
+	;
+
+else_BEG:
+		T_ELSE						{ 
+										fmt.Printf("_ELSE_BEG%v: ", IF_Label.Topv())
+										IF_Label.END()
+									}
+	;
+
+fact_Expr:
+		'(' expr ')'
+	|	expr
+	;
+
+Stmts_Block:
+		'{' stmts '}'
+	;
+
 expr:   '(' expr ')'                { /* empty */ }
 	|   expr '+' expr               { fmt.Print("add ") }
 	|   expr '-' expr               { fmt.Print("sub ") }
@@ -75,6 +123,12 @@ expr:   '(' expr ')'                { /* empty */ }
 	|   expr '&' expr               { fmt.Print("and ") }
 	|   expr '|' expr               { fmt.Print("or ") }
 	|   expr '%' expr               { fmt.Print("mod ") }
+	|   expr '>' expr               { fmt.Print("gt ") }
+	|   expr '<' expr               { fmt.Print("ls ") }
+	|   expr T_EQ expr           	{ fmt.Print("equl ") }
+	|  	'!' expr           			{ fmt.Print("not ") }
+	|   expr T_AND expr           	{ fmt.Print("and_b ") }
+	|   expr T_OR expr           	{ fmt.Print("or_b ") }
 	|   Identifier					{ fmt.Printf("'%v' load ", $1) }
 	|	NumConstant					{ fmt.Printf("%v ", $1) }
 	|   '-' NumConstant %prec UMINUS{ fmt.Printf("-%v ",$2) }

@@ -37,7 +37,7 @@ func (l *lex) Lex(lval *FifSymType) int {
 	return l.scanNormal(lval)
 }
 
-var idRegex = regexp.MustCompile("[[\\w\\$_]")
+var idRegex = regexp.MustCompile("[\\w\\$_]")
 
 func (l *lex) scanNormal(lval *FifSymType) int {
 	for b := l.next(); b != 0; b = l.next() {

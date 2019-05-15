@@ -17,3 +17,6 @@
 # goyacc
 fif_parser.go
 *.output
+
+# test fif
+*._fif
