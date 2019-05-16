@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 )
 
 func main() {
@@ -52,4 +54,9 @@ func repl() {
 		Parse(data)
 		fmt.Print("\n")
 	}
+}
+
+func fmtFloat64(f float64) string {
+	s := strconv.FormatFloat(f, 'f', 10, 64)
+	return strings.Trim(s, ".0")
 }

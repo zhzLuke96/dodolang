@@ -240,5 +240,5 @@ fif_block:
 any_T:
 		Identifier					{ $$ = $1.(string) }
 	|	StringConstant				{ $$ = "'" + $1.(string) + "'" }
-	|	NumConstant					{ $$ = $1.(string) }
+	|	NumConstant					{ $$ = fmtFloat64($1.(float64)) }
 	;
