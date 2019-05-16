@@ -11,6 +11,30 @@ import (
 	"unicode"
 )
 
+var idRegex = regexp.MustCompile("[\\w\\$_]")
+var needLook = regexp.MustCompile("[=+\\-*/<>]")
+var reserved_words = map[string]int{
+	"func":        FuncDefined,
+	"gen":         GenDefined,
+	"yield":       T_YIELD,
+	"coro":        CoroDefined,
+	"return":      FuncReturn,
+	"if":          T_IF,
+	"else":        T_ELSE,
+	"then":        T_THEN,
+	"true":        T_TRUE,
+	"false":       T_FALSE,
+	">=":          T_GE,
+	"<=":          T_LE,
+	"==":          T_EQ,
+	"for":         T_FOR,
+	"while":       T_WHILE,
+	"goto":        T_GOTO,
+	"var":         T_VAR,
+	"null":        T_NULL,
+	"__fifcode__": T_FIF,
+}
+
 func Parse(input []byte) error {
 	l := newLex(input)
 	_ = FifParse(l)
@@ -36,9 +60,6 @@ func newLex(input []byte) *lex {
 func (l *lex) Lex(lval *FifSymType) int {
 	return l.scanNormal(lval)
 }
-
-var idRegex = regexp.MustCompile("[\\w\\$_]")
-var needLook = regexp.MustCompile("[=+\\-*/<>]")
 
 func (l *lex) scanNormal(lval *FifSymType) int {
 	for b := l.next(); b != 0; b = l.next() {
@@ -122,25 +143,6 @@ func (l *lex) scanNum(lval *FifSymType) int {
 			return NumConstant
 		}
 	}
-}
-
-var reserved_words = map[string]int{
-	"func":        FuncDefined,
-	"return":      FuncReturn,
-	"if":          T_IF,
-	"else":        T_ELSE,
-	"then":        T_THEN,
-	"true":        T_TRUE,
-	"false":       T_FALSE,
-	">=":          T_GE,
-	"<=":          T_LE,
-	"==":          T_EQ,
-	"for":         T_FOR,
-	"while":       T_WHILE,
-	"goto":        T_GOTO,
-	"var":         T_VAR,
-	"null":        T_NULL,
-	"__fifcode__": T_FIF,
 }
 
 func (l *lex) scanIdentifier(lval *FifSymType) int {

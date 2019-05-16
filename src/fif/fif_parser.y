@@ -25,11 +25,11 @@ func reverse(s []string) []string {
 
 %token LexError
 %token <val> Identifier StringConstant NumConstant
-%token <val> FuncDefined FuncReturn
+%token <val> FuncDefined FuncReturn GenDefined CoroDefined
 %token <val> T_IF T_ELSE T_THEN T_TRUE T_FALSE T_GOTO
 %token <val> T_FOR T_WHILE T_FIF
 %token <val> T_EQ T_AND T_OR T_GE T_LE
-%token <val> T_VAR T_NULL
+%token <val> T_VAR T_NULL T_YIELD
 
 %left '='
 %left '|'
@@ -59,19 +59,19 @@ stmts:  /* empty */
 stmt:	assignStmt
 	|	callStmt
 	|	retStmt
+	|	yeildStmt
 	|	if_stmt
 	|	named_func_def
+	|	named_gen_def
 	|	fif_code
 	|	labelStmt
 	|	gotoStmt
 	|	varStmt
 	;
 
-assignStmt:	assignId '=' expr		{ fmt.Printf("store ") }
-	;
-
-assignId:
-		Identifier					{ fmt.Printf("'%v' ", $1) }
+assignStmt:
+		Identifier '=' expr			{ fmt.Printf("'%v' swap store ", $1) }
+	|	Identifier '=' T_YIELD expr { fmt.Printf("ret '%v' arg ", $1) }
 	;
 
 labelStmt:
@@ -85,6 +85,10 @@ gotoStmt:
 retStmt:
 		FuncReturn					{ fmt.Printf("ret ") }
 	|	FuncReturn expr				{ fmt.Printf("ret ") }
+	;
+
+yeildStmt:
+		T_YIELD expr				{ fmt.Printf("ret ") }
 	;
 
 varStmt:
@@ -195,6 +199,7 @@ expr:   expr '+' expr               { fmt.Print("add ") }
 	|	StringConstant				{ fmt.Printf("'%v' ", $1) }
 	| 	callExpr          			{ /* empty */ }
 	|	func_def					{ /* empty */ }
+	|	gen_def						{ /* empty */ }
 	|	inline_if_stmt				{ /* empty */ }
 	|	'(' expr ')'                { /* empty */ }
 	;
@@ -215,7 +220,7 @@ call_arg:
 
 named_func_def:
 		named_func_h '(' func_args ')' '{' func_body '}'
-									{ fmt.Printf("endfunc store ") }
+									{ fmt.Printf("endfunc storei ") }
 	;
 
 named_func_h:
@@ -243,6 +248,36 @@ func_arg:
 
 func_body:
 		S
+	;
+
+named_gen_def:
+		named_gen_h '(' func_args ')' '{' func_body '}'
+									{ fmt.Printf("endfunc storei func '__gen__' load callx endfunc ret endfunc storei ") }
+	;
+
+named_gen_h:
+		GenDefined Identifier		{ fmt.Printf("'%v' func '__gen__' func ",$2) }
+	;
+
+gen_def:
+		gen_def_h '(' func_args ')' '{' func_body '}'
+									{
+										/* 	
+											func
+												'__gen__' func 
+												//...
+												endfunc store
+												func
+													'__gen__' load callx
+												endfunc ret
+											endfunc
+										*/
+										fmt.Printf("endfunc storei func '__gen__' load callx endfunc ret endfunc")
+									}
+	;
+
+gen_def_h:
+		GenDefined					{ fmt.Printf("func '__gen__' func ") }
 	;
 
 fif_code:
