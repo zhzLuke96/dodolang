@@ -6,6 +6,8 @@ import (
 	"strconv"
 )
 
+type fifNumber float64
+
 type Runner struct {
 	VM *fifVM
 }
@@ -22,6 +24,14 @@ func (r *Runner) Run() {
 	for {
 		program := r.CurProgram()
 		if program.PC == len(program.Code) {
+			if r.VM.CurrentFrame.SuperFrame != nil {
+				// If the program does not return normally at
+				// last, the stack frame is automatically judged.
+				// If the execution stack is not empty,
+				// the stack will continue execution.
+				r.VM.CurrentFrame = r.VM.CurrentFrame.SuperFrame
+				continue
+			}
 			break
 		}
 		r.Eval(r.Expr())
@@ -43,8 +53,24 @@ func (r *Runner) Eval(expr string) {
 		r.div()
 	case "mod":
 		r.mod()
+	case "equl":
+		r.equl()
+	case "nequl":
+		r.nequl()
+	case "gt":
+		r.gt()
+	case "ls":
+		r.ls()
 	case "dup":
 		r.dup()
+	case "not":
+		r.not()
+	case "neg":
+		r.neg()
+	case "and":
+		r.and()
+	case "or":
+		r.or()
 	case "swap":
 		r.swap()
 	case "print":
@@ -57,14 +83,10 @@ func (r *Runner) Eval(expr string) {
 		r.len()
 	case "jmp":
 		r.jmp()
-	case "nequljmp":
-		r.nequljmp()
-	case "gtjmp":
-		r.gtjmp()
-	case "equljmp":
-		r.equljmp()
-	case "lsjmp":
-		r.lsjmp()
+	case "tjmp":
+		r.tjmp()
+	case "fjmp":
+		r.fjmp()
 	case "func":
 		r._func()
 	case "arg":
@@ -93,7 +115,7 @@ func (r *Runner) Eval(expr string) {
 		} else {
 			fnum, err := strconv.ParseFloat(expr, 64)
 			if err == nil {
-				r.push(fnum)
+				r.push(fifNumber(fnum))
 				return
 			}
 			if fn, ok := r.CurProgram().Env.get(expr); ok {
@@ -131,48 +153,48 @@ func (r *Runner) swap() {
 }
 
 func (r *Runner) add() {
-	b := r.pop().(float64)
-	a := r.pop().(float64)
+	b := r.pop().(fifNumber)
+	a := r.pop().(fifNumber)
 	r.push(a + b)
 }
 
 func (r *Runner) sub() {
-	b := r.pop().(float64)
-	a := r.pop().(float64)
+	b := r.pop().(fifNumber)
+	a := r.pop().(fifNumber)
 	r.push(a - b)
 }
 
 func (r *Runner) mul() {
-	b := r.pop().(float64)
-	a := r.pop().(float64)
+	b := r.pop().(fifNumber)
+	a := r.pop().(fifNumber)
 	r.push(a * b)
 }
 
 func (r *Runner) div() {
-	b := r.pop().(float64)
-	a := r.pop().(float64)
+	b := r.pop().(fifNumber)
+	a := r.pop().(fifNumber)
 	r.push(a / b)
 }
 
 func (r *Runner) mod() {
-	b := r.pop().(float64)
-	a := r.pop().(float64)
-	r.push(float64(int(a) % int(b)))
+	b := r.pop().(fifNumber)
+	a := r.pop().(fifNumber)
+	r.push(fifNumber(int(a) % int(b)))
 }
 
 func (r *Runner) char() {
-	idx := int(r.pop().(float64))
+	idx := int(r.pop().(fifNumber))
 	str := r.pop().(string)
 	if idx >= len(str) || idx < 0 {
 		r.push("")
 	} else {
-		r.push(float64(str[idx]))
+		r.push(fifNumber(str[idx]))
 	}
 }
 
 func (r *Runner) len() {
 	str := r.pop().(string)
-	r.push(float64(len(str)))
+	r.push(fifNumber(len(str)))
 }
 
 func (r *Runner) print() {
@@ -183,48 +205,251 @@ func (r *Runner) println() {
 	fmt.Println(r.pop())
 }
 
+func isTRUE(v interface{}) bool {
+	if n, ok := v.(float64); ok {
+		if n > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func TRUE() fifNumber  { return fifNumber(1) }
+func FALSE() fifNumber { return fifNumber(0) }
+
+// bool
+func (r *Runner) not() {
+	a := r.pop()
+	if isTRUE(a) {
+		r.push(FALSE())
+	} else {
+		r.push(TRUE())
+	}
+}
+func (r *Runner) neg() {
+	a := r.pop()
+	if v, ok := a.(fifNumber); ok {
+		r.push(-v)
+	} else {
+		r.push(a)
+		r.not()
+	}
+}
+func (r *Runner) and() {
+	a := r.pop()
+	b := r.pop()
+	if isTRUE(a) && isTRUE(b) {
+		r.push(TRUE())
+	} else {
+		r.push(FALSE())
+	}
+}
+func (r *Runner) or() {
+	a := r.pop()
+	b := r.pop()
+	if isTRUE(a) || isTRUE(b) {
+		r.push(TRUE())
+	} else {
+		r.push(FALSE())
+	}
+}
+
+// fifequl
+func fif_func_equl(a, b Program) bool {
+	return false
+}
+
+func fif_equl(a, b interface{}) bool {
+	if va, ok := a.(fifNumber); ok {
+		if vb, ok := b.(fifNumber); ok {
+			if va == vb {
+				return true
+			}
+		}
+	}
+	if va, ok := a.(string); ok {
+		if vb, ok := b.(string); ok {
+			if va == vb {
+				return true
+			}
+		}
+	}
+	if va, ok := a.(Program); ok {
+		if vb, ok := b.(Program); ok {
+			if fif_func_equl(va, vb) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// equl nequl
+// num str nil func bool(num)
+func (r *Runner) nequl() {
+	a := r.pop()
+	b := r.pop()
+	if fif_equl(a, b) {
+		r.push(FALSE())
+	} else {
+		r.push(TRUE())
+	}
+}
+
+func (r *Runner) equl() {
+	a := r.pop()
+	b := r.pop()
+	if fif_equl(a, b) {
+		r.push(TRUE())
+	} else {
+		r.push(FALSE())
+	}
+}
+
+func (r *Runner) gt() {
+	TRUE := func() { r.push(fifNumber(1)) }
+	FALSE := func() { r.push(fifNumber(0)) }
+	b := r.pop()
+	a := r.pop()
+	if va, ok := a.(fifNumber); ok {
+		if vb, ok := b.(fifNumber); ok {
+			if va > vb {
+				TRUE()
+			} else {
+				FALSE()
+			}
+		} else {
+			FALSE()
+		}
+		return
+	}
+	if va, ok := a.(string); ok {
+		if vb, ok := b.(string); ok {
+			if va > vb {
+				TRUE()
+			} else {
+				FALSE()
+			}
+		} else {
+			FALSE()
+		}
+		return
+	}
+	// if va, ok := a.(Program); ok {
+	// 	if vb, ok := b.(Program); ok {
+	// 		if va == vb {
+	// 			TRUE()
+	// 		} else {
+	// 			FALSE()
+	// 		}
+	// 		return
+	// 	} else {
+	// 		FALSE()
+	// 	}
+	// }
+	FALSE()
+}
+
+func (r *Runner) ls() {
+	TRUE := func() { r.push(fifNumber(1)) }
+	FALSE := func() { r.push(fifNumber(0)) }
+	b := r.pop()
+	a := r.pop()
+	if va, ok := a.(fifNumber); ok {
+		if vb, ok := b.(fifNumber); ok {
+			if va < vb {
+				TRUE()
+			} else {
+				FALSE()
+			}
+		} else {
+			FALSE()
+		}
+		return
+	}
+	if va, ok := a.(string); ok {
+		if vb, ok := b.(string); ok {
+			if va < vb {
+				TRUE()
+			} else {
+				FALSE()
+			}
+		} else {
+			FALSE()
+		}
+		return
+	}
+	// if va, ok := a.(Program); ok {
+	// 	if vb, ok := b.(Program); ok {
+	// 		if va == vb {
+	// 			TRUE()
+	// 		} else {
+	// 			FALSE()
+	// 		}
+	// 		return
+	// 	} else {
+	// 		FALSE()
+	// 	}
+	// }
+	FALSE()
+}
+
 // jump
 
 func (r *Runner) jmp() {
-	addr := r.pop().(float64)
+	addr := r.pop().(fifNumber)
 	r.CurProgram().PC = int(addr)
 }
 
-func (r *Runner) nequljmp() {
-	addr := r.pop().(float64)
-	a := r.pop().(float64)
-	b := r.pop().(float64)
-	if a != b {
+func (r *Runner) tjmp() {
+	addr := r.pop().(fifNumber)
+	if r.pop().(fifNumber) == 1.0 {
 		r.CurProgram().PC = int(addr)
 	}
 }
 
-func (r *Runner) equljmp() {
-	addr := r.pop().(float64)
-	a := r.pop().(float64)
-	b := r.pop().(float64)
-	if a == b {
+func (r *Runner) fjmp() {
+	addr := r.pop().(fifNumber)
+	if r.pop().(fifNumber) == 0.0 {
 		r.CurProgram().PC = int(addr)
 	}
 }
 
-func (r *Runner) gtjmp() {
-	addr := r.pop().(float64)
-	b := r.pop().(float64)
-	a := r.pop().(float64)
-	if a > b {
-		r.CurProgram().PC = int(addr)
-	}
-}
+// func (r *Runner) nequljmp() {
+// 	addr := r.pop().(fifNumber)
+// 	a := r.pop().(fifNumber)
+// 	b := r.pop().(fifNumber)
+// 	if a != b {
+// 		r.CurProgram().PC = int(addr)
+// 	}
+// }
 
-func (r *Runner) lsjmp() {
-	addr := r.pop().(float64)
-	b := r.pop().(float64)
-	a := r.pop().(float64)
-	if a > b {
-		r.CurProgram().PC = int(addr)
-	}
-}
+// func (r *Runner) equljmp() {
+// 	addr := r.pop().(fifNumber)
+// 	a := r.pop().(fifNumber)
+// 	b := r.pop().(fifNumber)
+// 	if a == b {
+// 		r.CurProgram().PC = int(addr)
+// 	}
+// }
+
+// func (r *Runner) gtjmp() {
+// 	addr := r.pop().(fifNumber)
+// 	b := r.pop().(fifNumber)
+// 	a := r.pop().(fifNumber)
+// 	if a > b {
+// 		r.CurProgram().PC = int(addr)
+// 	}
+// }
+
+// func (r *Runner) lsjmp() {
+// 	addr := r.pop().(fifNumber)
+// 	b := r.pop().(fifNumber)
+// 	a := r.pop().(fifNumber)
+// 	if a > b {
+// 		r.CurProgram().PC = int(addr)
+// 	}
+// }
 
 // function
 func (r *Runner) _func() {
@@ -305,7 +530,7 @@ func (r *Runner) load() {
 
 func (r *Runner) exit() {
 	code := r.pop()
-	if v, ok := code.(float32); ok {
+	if v, ok := code.(fifNumber); ok {
 		os.Exit(int(v))
 	} else {
 		os.Exit(0)

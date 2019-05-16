@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
 )
-
-//go:generate goyacc -l -o parser.go parser.y
 
 func Parse(input []byte) error {
 	l := newLex(input)
@@ -122,6 +121,12 @@ var reserved_words = map[string]int{
 	"return":      FuncReturn,
 	"if":          T_IF,
 	"else":        T_ELSE,
+	"then":        T_THEN,
+	"true":        T_TRUE,
+	"false":       T_FALSE,
+	">=":          T_GE,
+	"<=":          T_LE,
+	"==":          T_EQ,
 	"for":         T_FOR,
 	"while":       T_WHILE,
 	"__fifcode__": T_FIF,
@@ -169,5 +174,5 @@ func (l *lex) next() byte {
 // Error satisfies yyLexer.
 func (l *lex) Error(s string) {
 	l.err = errors.New(s)
-	fmt.Printf("\n[ERROR]:%v pos:[L:%v,P:%v] \n", s, l.line, l.linepos)
+	fmt.Fprintf(os.Stderr, "[ERROR]:%v pos:[L:%v,P:%v]", s, l.line+1, l.linepos)
 }

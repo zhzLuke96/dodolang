@@ -18,7 +18,7 @@ func REPL() {
 		data, _, _ := reader.ReadLine()
 		machine.InputContent = string(data)
 		code := machine.GetTokenArr()
-		runner.VM.CurrentFrame.Func.Code = code
+		runner.VM.CurrentFrame.Func.Code = labelLoad(code)
 		runner.VM.CurrentFrame.Func.PC = 0
 		runner.Run()
 	}

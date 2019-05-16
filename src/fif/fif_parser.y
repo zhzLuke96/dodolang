@@ -26,14 +26,17 @@ func reverse(s []string) []string {
 %token LexError
 %token <val> Identifier StringConstant NumConstant
 %token <val> FuncDefined FuncReturn
-%token <val> T_IF T_ELSE T_FOR T_WHILE T_FIF
-%token <val> T_EQ T_AND T_OR
+%token <val> T_IF T_ELSE T_THEN T_TRUE T_FALSE
+%token <val> T_FOR T_WHILE T_FIF
+%token <val> T_EQ T_AND T_OR T_GE T_LE
 
 %left '='
 %left '|'
 %left '&'
 %left '+'  '-'
 %left '*'  '/'  '%'
+%left '<' '>'
+%left T_EQ T_AND T_OR T_GE T_LE
 %right UMINUS
 
 %%
@@ -71,6 +74,34 @@ callStmt:
 		callExpr
 	;
 
+inline_if_stmt:
+		inline_if_condition inline_if_then expr inline_if_else expr inline_if_end
+	;
+
+inline_if_condition:
+		expr						{ IF_Label.BEG() }
+	;
+
+inline_if_then:
+		T_THEN						{
+										fmt.Printf("&_THEN_END%v fjmp ", IF_Label.Topv())
+									}
+	;
+
+inline_if_else:
+		T_ELSE						{
+										fmt.Printf("&_IF_END%v jmp ", IF_Label.Topv())
+										fmt.Printf("_THEN_END%v: ", IF_Label.Topv())
+									}
+	;
+
+inline_if_end:
+		/* empty */					{
+										fmt.Printf("_IF_END%v: ", IF_Label.Topv())
+										IF_Label.END()
+									}
+	;
+
 if_stmt:
 		if_BEG fact_Expr if_THEN Stmts_Block then_END if_END
 	|	if_BEG fact_Expr if_THEN Stmts_Block then_END else_BEG Stmts_Block if_END
@@ -96,13 +127,13 @@ then_END:
 if_END:
 		/* empty */					{
 										fmt.Printf("_IF_END%v: ", IF_Label.Topv())
+										IF_Label.END()
 									}
 	;
 
 else_BEG:
 		T_ELSE						{ 
 										fmt.Printf("_ELSE_BEG%v: ", IF_Label.Topv())
-										IF_Label.END()
 									}
 	;
 
@@ -129,12 +160,16 @@ expr:   '(' expr ')'                { /* empty */ }
 	|  	'!' expr           			{ fmt.Print("not ") }
 	|   expr T_AND expr           	{ fmt.Print("and_b ") }
 	|   expr T_OR expr           	{ fmt.Print("or_b ") }
+	|	T_TRUE						{ fmt.Printf("1 ") }
+	|	T_FALSE						{ fmt.Printf("0 ") }
 	|   Identifier					{ fmt.Printf("'%v' load ", $1) }
 	|	NumConstant					{ fmt.Printf("%v ", $1) }
 	|   '-' NumConstant %prec UMINUS{ fmt.Printf("-%v ",$2) }
+	|   '-' Identifier %prec UMINUS { fmt.Printf("'%v' load neg ",$2) }
 	|	StringConstant				{ fmt.Printf("'%v' ", $1) }
 	| 	callExpr          			{ /* empty */ }
 	|	func_def					{ /* empty */ }
+	|	inline_if_stmt				{ /* empty */ }
 	;
 
 callExpr:

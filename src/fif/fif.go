@@ -4,12 +4,23 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 )
 
 func main() {
-	parseFile()
+	// parseFile()
 	// repl()
+	stdInParse()
+}
+
+func stdInParse() {
+	reader := bufio.NewReader(os.Stdin)
+	code, err := reader.ReadBytes('\000')
+	if err != nil {
+		log.Fatal(err)
+	}
+	Parse(code)
 }
 
 func ReadAll(filePth string) ([]byte, error) {
