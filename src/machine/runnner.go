@@ -99,6 +99,8 @@ func (r *Runner) Eval(expr string) {
 		r.load()
 	case "call":
 		r.call()
+	case "callx":
+		r.callx()
 	case "ret":
 		r.ret()
 	case "exit":
@@ -117,7 +119,7 @@ func (r *Runner) Eval(expr string) {
 				return
 			}
 			if fn, ok := r.CurProgram().Env.get(expr); ok {
-				if ffn, ok := fn.(Program); ok {
+				if ffn, ok := fn.(*Program); ok {
 					r._call(ffn)
 					return
 				}
@@ -196,11 +198,21 @@ func (r *Runner) len() {
 }
 
 func (r *Runner) print() {
-	fmt.Print(r.pop())
+	v := r.pop()
+	if v == nil {
+		fmt.Print("null")
+	} else {
+		fmt.Print(v)
+	}
 }
 
 func (r *Runner) println() {
-	fmt.Println(r.pop())
+	v := r.pop()
+	if v == nil {
+		fmt.Println("null")
+	} else {
+		fmt.Println(v)
+	}
 }
 
 func isTRUE(v interface{}) bool {
@@ -413,42 +425,6 @@ func (r *Runner) fjmp() {
 	}
 }
 
-// func (r *Runner) nequljmp() {
-// 	addr := r.pop().(fifNumber)
-// 	a := r.pop().(fifNumber)
-// 	b := r.pop().(fifNumber)
-// 	if a != b {
-// 		r.CurProgram().PC = int(addr)
-// 	}
-// }
-
-// func (r *Runner) equljmp() {
-// 	addr := r.pop().(fifNumber)
-// 	a := r.pop().(fifNumber)
-// 	b := r.pop().(fifNumber)
-// 	if a == b {
-// 		r.CurProgram().PC = int(addr)
-// 	}
-// }
-
-// func (r *Runner) gtjmp() {
-// 	addr := r.pop().(fifNumber)
-// 	b := r.pop().(fifNumber)
-// 	a := r.pop().(fifNumber)
-// 	if a > b {
-// 		r.CurProgram().PC = int(addr)
-// 	}
-// }
-
-// func (r *Runner) lsjmp() {
-// 	addr := r.pop().(fifNumber)
-// 	b := r.pop().(fifNumber)
-// 	a := r.pop().(fifNumber)
-// 	if a > b {
-// 		r.CurProgram().PC = int(addr)
-// 	}
-// }
-
 // function
 func (r *Runner) _func() {
 	code := []string{}
@@ -467,7 +443,7 @@ func (r *Runner) _func() {
 		}
 		code = append(code, e)
 	}
-	r.push(Program{
+	r.push(&Program{
 		Code: code,
 		Env:  NewVMEnv(r.CurProgram().Env),
 		PC:   0,
@@ -480,20 +456,43 @@ func (r *Runner) arg() {
 	r.CurProgram().Env.set(key, val, true)
 }
 
-func (r *Runner) _call(fn Program) {
-	sf := NewStackFrame(r.VM.CurrentFrame, fn.Clone())
+func (r *Runner) _call(fn *Program) {
+	newFn := fn.Clone()
+	sf := NewStackFrame(r.VM.CurrentFrame, newFn)
 	// init
-	fn.PC = 0
+	newFn.PC = 0
 	r.VM.CurrentFrame = sf
+}
+
+func (r *Runner) _callx(fn *Program) {
+	sf := NewStackFrame(r.VM.CurrentFrame, fn)
+	// fmt.Printf("[callx]pc:%v,code:%v", fn.PC, fn.Code)
+	// init
+	r.VM.CurrentFrame = sf
+}
+
+func (r *Runner) callx() {
+	nameOrFn := r.pop()
+	if fnName, ok := nameOrFn.(string); ok {
+		if fn, ok := r.CurProgram().Env.get(fnName); ok {
+			if f, ok := fn.(*Program); ok {
+				r._callx(f)
+			}
+		}
+	} else if fn, ok := nameOrFn.(*Program); ok {
+		r._call(fn)
+	}
 }
 
 func (r *Runner) call() {
 	nameOrFn := r.pop()
 	if fnName, ok := nameOrFn.(string); ok {
 		if fn, ok := r.CurProgram().Env.get(fnName); ok {
-			r._call(fn.(Program))
+			if f, ok := fn.(*Program); ok {
+				r._call(f)
+			}
 		}
-	} else if fn, ok := nameOrFn.(Program); ok {
+	} else if fn, ok := nameOrFn.(*Program); ok {
 		r._call(fn)
 	}
 }

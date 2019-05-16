@@ -65,12 +65,10 @@ func (v *VMEnv) set(key string, val interface{}, init bool) {
 }
 
 func (v *VMEnv) setScope(key string, val interface{}) bool {
-	if v.Super == nil {
-		if _, ok := v.Table[key]; ok {
-			v.Table[key] = val
-			return true
-		}
-	} else {
+	if _, ok := v.Table[key]; ok {
+		v.Table[key] = val
+		return true
+	} else if v.Super != nil {
 		return v.Super.setScope(key, val)
 	}
 	return false

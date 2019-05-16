@@ -46,6 +46,7 @@ func RunfifCode(code string) {
 
 func ExecFifthCode(code string) error {
 	pcode, err := ParseFifthCode(code)
+	// fmt.Printf("[LOG] pcode = %v\n", pcode)
 	if err != nil {
 		return err
 	}

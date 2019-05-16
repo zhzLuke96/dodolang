@@ -1,1 +1,1 @@
-go build -o ./bin/fifth.o ./src/.
+go build -o ./bin/fifth.exe ./src/.
