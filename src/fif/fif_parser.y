@@ -26,9 +26,10 @@ func reverse(s []string) []string {
 %token LexError
 %token <val> Identifier StringConstant NumConstant
 %token <val> FuncDefined FuncReturn
-%token <val> T_IF T_ELSE T_THEN T_TRUE T_FALSE
+%token <val> T_IF T_ELSE T_THEN T_TRUE T_FALSE T_GOTO
 %token <val> T_FOR T_WHILE T_FIF
 %token <val> T_EQ T_AND T_OR T_GE T_LE
+%token <val> T_VAR T_NULL
 
 %left '='
 %left '|'
@@ -61,6 +62,9 @@ stmt:	assignStmt
 	|	if_stmt
 	|	named_func_def
 	|	fif_code
+	|	labelStmt
+	|	gotoStmt
+	|	varStmt
 	;
 
 assignStmt:	assignId '=' expr		{ fmt.Printf("store ") }
@@ -68,6 +72,28 @@ assignStmt:	assignId '=' expr		{ fmt.Printf("store ") }
 
 assignId:
 		Identifier					{ fmt.Printf("'%v' ", $1) }
+	;
+
+labelStmt:
+		Identifier ':'				{ fmt.Printf("%v: ", $1) }
+	;
+
+gotoStmt:
+		T_GOTO Identifier			{ fmt.Printf("&%v jmp ", $2) }	
+	;
+
+retStmt:
+		FuncReturn					{ fmt.Printf("ret ") }
+	|	FuncReturn expr				{ fmt.Printf("ret ") }
+	;
+
+varStmt:
+		T_VAR vars
+	;
+
+vars:	/* empty */
+	|	Identifier					{ fmt.Printf("'%v' nop storei ", $1) }
+	|	Identifier ',' vars			{ fmt.Printf("'%v' nop storei ", $1) }	
 	;
 
 callStmt:
@@ -161,6 +187,7 @@ expr:   expr '+' expr               { fmt.Print("add ") }
 	|   expr T_OR expr           	{ fmt.Print("or_b ") }
 	|	T_TRUE						{ fmt.Printf("1 ") }
 	|	T_FALSE						{ fmt.Printf("0 ") }
+	|	T_NULL						{ fmt.Printf("nop ") }
 	|   Identifier					{ fmt.Printf("'%v' load ", $1) }
 	|	NumConstant					{ fmt.Printf("%v ", $1) }
 	|   '-' NumConstant %prec UMINUS{ fmt.Printf("-%v ",$2) }
@@ -216,11 +243,6 @@ func_arg:
 
 func_body:
 		S
-	;
-
-retStmt:
-		FuncReturn					{ fmt.Printf("ret ") }
-	|	FuncReturn expr				{ fmt.Printf("ret ") }
 	;
 
 fif_code:

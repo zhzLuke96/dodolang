@@ -137,6 +137,9 @@ var reserved_words = map[string]int{
 	"==":          T_EQ,
 	"for":         T_FOR,
 	"while":       T_WHILE,
+	"goto":        T_GOTO,
+	"var":         T_VAR,
+	"null":        T_NULL,
 	"__fifcode__": T_FIF,
 }
 

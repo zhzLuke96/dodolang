@@ -93,10 +93,8 @@ func (r *Runner) Eval(expr string) {
 		r.arg()
 	case "store":
 		r.store()
-	case "storev":
-		r.storev()
-	case "stores":
-		r.stores()
+	case "storei":
+		r.storei()
 	case "load":
 		r.load()
 	case "call":
@@ -479,7 +477,7 @@ func (r *Runner) _func() {
 func (r *Runner) arg() {
 	key := r.pop().(string)
 	val := r.pop()
-	r.CurProgram().Env.set(key, val, false)
+	r.CurProgram().Env.set(key, val, true)
 }
 
 func (r *Runner) _call(fn Program) {
@@ -510,16 +508,10 @@ func (r *Runner) store() {
 	r.CurProgram().Env.set(key, val, false)
 }
 
-func (r *Runner) storev() {
+func (r *Runner) storei() {
 	val := r.pop()
 	key := r.pop().(string)
 	r.CurProgram().Env.set(key, val, true)
-}
-
-func (r *Runner) stores() {
-	val := r.pop()
-	key := r.pop().(string)
-	r.CurProgram().Env.setSuper(key, val)
 }
 
 func (r *Runner) load() {

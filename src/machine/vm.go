@@ -52,20 +52,28 @@ func (v *VMEnv) get(key string) (interface{}, bool) {
 	return v.Table[key], true
 }
 
-func (v *VMEnv) set(key string, val interface{}, setsuper bool) {
-	if setsuper {
-		if _, ok := v.Table[key]; ok {
-			v.Table[key] = val
-		} else {
-			v.Super.set(key, val, true)
-		}
-	} else {
+func (v *VMEnv) set(key string, val interface{}, init bool) {
+	if init {
+		v.Table[key] = val
+		return
+	}
+	if _, ok := v.Table[key]; ok {
+		v.Table[key] = val
+	} else if !v.setScope(key, val) {
 		v.Table[key] = val
 	}
 }
 
-func (v *VMEnv) setSuper(key string, val interface{}) {
-	v.Super.set(key, val, false)
+func (v *VMEnv) setScope(key string, val interface{}) bool {
+	if v.Super == nil {
+		if _, ok := v.Table[key]; ok {
+			v.Table[key] = val
+			return true
+		}
+	} else {
+		return v.Super.setScope(key, val)
+	}
+	return false
 }
 
 type fifVM struct {
