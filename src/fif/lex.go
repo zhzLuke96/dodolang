@@ -22,6 +22,7 @@ type lex struct {
 	pos     int
 	linepos int
 	line    int
+	lastT   string
 	err     error
 }
 
@@ -37,6 +38,7 @@ func (l *lex) Lex(lval *FifSymType) int {
 }
 
 var idRegex = regexp.MustCompile("[\\w\\$_]")
+var needLook = regexp.MustCompile("[=+\\-*/<>]")
 
 func (l *lex) scanNormal(lval *FifSymType) int {
 	for b := l.next(); b != 0; b = l.next() {
@@ -56,7 +58,11 @@ func (l *lex) scanNormal(lval *FifSymType) int {
 		case idRegex.Match([]byte{b}):
 			l.backup()
 			return l.scanIdentifier(lval)
+		case needLook.Match([]byte{b}) && !l.nxtIsBreakWord():
+			l.backup()
+			return l.scanOpt(lval)
 		default:
+			l.lastT = string(b)
 			return int(b)
 		}
 	}
@@ -87,6 +93,7 @@ func (l *lex) scanString(lval *FifSymType, match byte) int {
 			buf.WriteByte(b2)
 		case match:
 			lval.val = buf.String()
+			l.lastT = buf.String()
 			return StringConstant
 		default:
 			buf.WriteByte(b)
@@ -106,6 +113,7 @@ func (l *lex) scanNum(lval *FifSymType) int {
 			buf.WriteByte(b)
 		default:
 			l.backup()
+			l.lastT = buf.String()
 			val, err := strconv.ParseFloat(buf.String(), 64)
 			if err != nil {
 				return LexError
@@ -143,6 +151,7 @@ func (l *lex) scanIdentifier(lval *FifSymType) int {
 		default:
 			l.backup()
 			lval.val = buf.String()
+			l.lastT = buf.String()
 			if ty, ok := reserved_words[lval.val.(string)]; ok {
 				// fmt.Printf("\nty:[%v] [%v]\n", ty, lval.val.(string))
 				return ty
@@ -150,6 +159,30 @@ func (l *lex) scanIdentifier(lval *FifSymType) int {
 			return Identifier
 		}
 	}
+}
+
+func (l *lex) scanOpt(lval *FifSymType) int {
+	buf := bytes.NewBuffer(nil)
+	b := l.next()
+	buf.WriteByte(b)
+	b = l.next()
+	buf.WriteByte(b)
+
+	lval.val = buf.String()
+	l.lastT = buf.String()
+	if ty, ok := reserved_words[lval.val.(string)]; ok {
+		// fmt.Printf("\nty:[%v] [%v]\n", ty, lval.val.(string))
+		return ty
+	}
+	return LexError
+}
+
+var breakWords = regexp.MustCompile("[[\\](){}.;\\s]")
+
+func (l *lex) nxtIsBreakWord() bool {
+	nxt := l.next()
+	l.backup()
+	return breakWords.Match([]byte{nxt})
 }
 
 func (l *lex) backup() {
@@ -174,5 +207,5 @@ func (l *lex) next() byte {
 // Error satisfies yyLexer.
 func (l *lex) Error(s string) {
 	l.err = errors.New(s)
-	fmt.Fprintf(os.Stderr, "[ERROR]:%v pos:[L:%v,P:%v]", s, l.line+1, l.linepos)
+	fmt.Fprintf(os.Stderr, "[ERROR]:%v pos:[L:%v,P:%v] token:[%v]", s, l.line+1, l.linepos, l.lastT)
 }

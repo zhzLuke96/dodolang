@@ -146,8 +146,7 @@ Stmts_Block:
 		'{' stmts '}'
 	;
 
-expr:   '(' expr ')'                { /* empty */ }
-	|   expr '+' expr               { fmt.Print("add ") }
+expr:   expr '+' expr               { fmt.Print("add ") }
 	|   expr '-' expr               { fmt.Print("sub ") }
 	|   expr '*' expr               { fmt.Print("mul ") }
 	|   expr '/' expr               { fmt.Print("div ") }
@@ -170,6 +169,7 @@ expr:   '(' expr ')'                { /* empty */ }
 	| 	callExpr          			{ /* empty */ }
 	|	func_def					{ /* empty */ }
 	|	inline_if_stmt				{ /* empty */ }
+	|	'(' expr ')'                { /* empty */ }
 	;
 
 callExpr:

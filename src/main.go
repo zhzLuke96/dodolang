@@ -21,7 +21,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ExecFifthCode(string(codefile))
+	err = ExecFifthCode(string(codefile))
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func ReadAll(filePth string) ([]byte, error) {
