@@ -1,12 +1,33 @@
 package machine
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
+func fmtF64(f float64) string {
+	if f == 0 {
+		return "0"
+	}
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, "%.12f", f)
+	ret := strings.Trim(buf.String(), "0")
+	ret = strings.Trim(ret, ".")
+	if ret == "" {
+		return "0"
+	} else {
+		return ret
+	}
+}
+
 type fifNumber float64
+
+func (f *fifNumber) String() string {
+	return fmtF64(float64(*f))
+}
 
 type Runner struct {
 	VM *fifVM
@@ -95,6 +116,8 @@ func (r *Runner) Eval(expr string) {
 		r.store()
 	case "storei":
 		r.storei()
+	case "storeu":
+		r.storeu()
 	case "load":
 		r.load()
 	case "call":
@@ -201,6 +224,8 @@ func (r *Runner) print() {
 	v := r.pop()
 	if v == nil {
 		fmt.Print("null")
+	} else if f, ok := v.(fifNumber); ok {
+		fmt.Print(f.String())
 	} else {
 		fmt.Print(v)
 	}
@@ -210,6 +235,8 @@ func (r *Runner) println() {
 	v := r.pop()
 	if v == nil {
 		fmt.Println("null")
+	} else if f, ok := v.(fifNumber); ok {
+		fmt.Println(f.String())
 	} else {
 		fmt.Println(v)
 	}
@@ -520,6 +547,12 @@ func (r *Runner) storei() {
 	val := r.pop()
 	key := r.pop().(string)
 	r.CurProgram().Env.set(key, val, true)
+}
+
+func (r *Runner) storeu() {
+	val := r.pop()
+	key := r.pop().(string)
+	r.CurProgram().Env.setUpper(key, val)
 }
 
 func (r *Runner) load() {

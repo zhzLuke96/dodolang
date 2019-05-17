@@ -74,6 +74,14 @@ func (v *VMEnv) setScope(key string, val interface{}) bool {
 	return false
 }
 
+func (v *VMEnv) setUpper(key string, val interface{}) {
+	if v.Super == nil {
+		v.Table[key] = val
+		return
+	}
+	v.Super.set(key, val, true)
+}
+
 type fifVM struct {
 	Data         stack.Stack
 	CurrentFrame *StackFrame

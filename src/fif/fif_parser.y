@@ -264,12 +264,12 @@ func_def_h:
 
 func_args:
 		/* empty */					{ /* empty */ }
-	|	Identifier func_arg			{ fmt.Fprintf(&ParserBuf,"'%v' arg ", $1) }
+	|	func_arg_list				{ /* empty */ }
 	;
 
-func_arg:
-		/* empty */					{ /* empty */ }
-	|	func_arg ',' Identifier		{ fmt.Fprintf(&ParserBuf,"'%v' arg ", $3) }
+func_arg_list:
+		Identifier					{ fmt.Fprintf(&ParserBuf,"'%v' arg ", $1) }
+	|	Identifier ',' func_arg_list{ fmt.Fprintf(&ParserBuf,"'%v' arg ", $1) }
 	;
 
 func_body:
