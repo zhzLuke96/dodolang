@@ -94,6 +94,8 @@ func (r *Runner) Eval(expr string) {
 		r.or()
 	case "swap":
 		r.swap()
+	case "stack_reverse":
+		r.stackReverse()
 	case "print":
 		r.print()
 	case "println":
@@ -173,6 +175,10 @@ func (r *Runner) swap() {
 	l := r.pop()
 	r.push(t)
 	r.push(l)
+}
+
+func (r *Runner) stackReverse() {
+	r.VM.Data.Reverse()
 }
 
 func (r *Runner) add() {
@@ -558,6 +564,10 @@ func (r *Runner) storeu() {
 func (r *Runner) load() {
 	key := r.pop().(string)
 	val, _ := r.CurProgram().Env.get(key)
+	if val == nil {
+		r.VM.Push(val)
+		return
+	}
 	r.VM.Push(val)
 }
 

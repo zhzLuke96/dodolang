@@ -76,7 +76,7 @@ func (v *VMEnv) setScope(key string, val interface{}) bool {
 
 func (v *VMEnv) setUpper(key string, val interface{}) {
 	if v.Super == nil {
-		v.Table[key] = val
+		// v.Table[key] = val
 		return
 	}
 	v.Super.set(key, val, true)
@@ -95,7 +95,10 @@ func NewFifVM(code []string) *fifVM {
 }
 
 func (f *fifVM) Pop() interface{} {
-	v, _ := f.Data.Pop()
+	v, err := f.Data.Pop()
+	if err != nil {
+		return nil
+	}
 	return v
 }
 

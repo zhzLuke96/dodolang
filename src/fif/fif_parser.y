@@ -236,12 +236,12 @@ callExpr:
 
 call_args:
 		/* empty */					{ /* empty */ }
-	|	expr call_arg				{ /* empty */ }
+	|	call_arg					{ /* empty */ }
 	;
 
 call_arg:
-		/* empty */					{ /* empty */ }
-	|	call_arg ',' expr			{ /* empty */ }
+		expr						{ /* empty */ }
+	|	expr ',' call_arg			{ /* empty */ }
 	;
 
 named_func_def:
@@ -259,7 +259,7 @@ func_def:
 	;
 
 func_def_h:
-		FuncDefined					{ fmt.Fprintf(&ParserBuf,"func ") }
+		FuncDefined					{ fmt.Fprintf(&ParserBuf,"func stack_reverse ") }
 	;
 
 func_args:
@@ -269,7 +269,7 @@ func_args:
 
 func_arg_list:
 		Identifier					{ fmt.Fprintf(&ParserBuf,"'%v' arg ", $1) }
-	|	Identifier ',' func_arg_list{ fmt.Fprintf(&ParserBuf,"'%v' arg ", $1) }
+	|	func_arg_list ',' Identifier{ fmt.Fprintf(&ParserBuf,"'%v' arg ", $3) }
 	;
 
 func_body:
