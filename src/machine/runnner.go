@@ -270,6 +270,15 @@ func fif_func_equl(a, b Program) bool {
 }
 
 func fif_equl(a, b interface{}) bool {
+	if a == nil {
+		if b == nil {
+			return true
+		} else {
+			return false
+		}
+	} else if b == nil {
+		return false
+	}
 	if va, ok := a.(fifNumber); ok {
 		if vb, ok := b.(fifNumber); ok {
 			if va == vb {
@@ -480,7 +489,7 @@ func (r *Runner) callx() {
 			}
 		}
 	} else if fn, ok := nameOrFn.(*Program); ok {
-		r._call(fn)
+		r._callx(fn)
 	}
 }
 

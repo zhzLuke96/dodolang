@@ -6,6 +6,7 @@
 
 # build
 ```
+bash build_parser.sh
 bash build.sh
 ```
 
@@ -30,6 +31,29 @@ func main(){
 }
 
 main()
+```
+
+### generator
+```go
+gen counter1(num){
+    while(1){
+        getv = yield num
+        
+        if getv == null {
+            num = num + 1
+        } else {
+            num = num + getv
+        }
+    }
+}
+
+gen counter2(){
+    num = 0
+    while true{
+        yield num
+        num = num + 1
+    }
+}
 ```
 
 # fif-code

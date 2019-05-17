@@ -1,5 +1,5 @@
 %{
-package main
+package fif
 
 import "fmt"
 import "strings"
@@ -7,13 +7,6 @@ import "strings"
 var fif_code_buf = []string{}
 var IF_Label = NewLabelStack()
 var WHILE_Label = NewLabelStack()
-
-func reverse(s []string) []string {
-	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
-		s[i], s[j] = s[j], s[i]
-	}
-	return s
-}
 
 %}
 
@@ -26,8 +19,8 @@ func reverse(s []string) []string {
 %token LexError
 %token <val> Identifier StringConstant NumConstant
 %token <val> FuncDefined FuncReturn GenDefined CoroDefined
-%token <val> T_IF T_ELSE T_THEN T_TRUE T_FALSE T_GOTO
-%token <val> T_FOR T_WHILE T_FIF
+%token <val> T_IF T_ELSE T_THEN T_TRUE T_FALSE T_GOTO 
+%token <val> T_FOR T_WHILE T_FIF T_BREAK
 %token <val> T_EQ T_AND T_OR T_GE T_LE
 %token <val> T_VAR T_NULL T_YIELD
 
@@ -61,34 +54,36 @@ stmt:	assignStmt
 	|	retStmt
 	|	yeildStmt
 	|	if_stmt
+	|	while_stmt
 	|	named_func_def
 	|	named_gen_def
 	|	fif_code
 	|	labelStmt
 	|	gotoStmt
+	|	breakStmt
 	|	varStmt
 	;
 
 assignStmt:
-		Identifier '=' expr			{ fmt.Printf("'%v' swap store ", $1) }
-	|	Identifier '=' T_YIELD expr { fmt.Printf("ret '%v' arg ", $1) }
+		Identifier '=' expr			{ fmt.Fprintf(&ParserBuf,"'%v' swap store ", $1) }
+	|	Identifier '=' T_YIELD expr { fmt.Fprintf(&ParserBuf,"ret '%v' arg ", $1) }
 	;
 
 labelStmt:
-		Identifier ':'				{ fmt.Printf("%v: ", $1) }
+		Identifier ':'				{ fmt.Fprintf(&ParserBuf,"%v: ", $1) }
 	;
 
 gotoStmt:
-		T_GOTO Identifier			{ fmt.Printf("&%v jmp ", $2) }	
+		T_GOTO Identifier			{ fmt.Fprintf(&ParserBuf,"&%v jmp ", $2) }	
 	;
 
 retStmt:
-		FuncReturn					{ fmt.Printf("ret ") }
-	|	FuncReturn expr				{ fmt.Printf("ret ") }
+		FuncReturn					{ fmt.Fprintf(&ParserBuf,"ret ") }
+	|	FuncReturn expr				{ fmt.Fprintf(&ParserBuf,"ret ") }
 	;
 
 yeildStmt:
-		T_YIELD expr				{ fmt.Printf("ret ") }
+		T_YIELD expr				{ fmt.Fprintf(&ParserBuf,"ret ") }
 	;
 
 varStmt:
@@ -96,8 +91,8 @@ varStmt:
 	;
 
 vars:	/* empty */
-	|	Identifier					{ fmt.Printf("'%v' nop storei ", $1) }
-	|	Identifier ',' vars			{ fmt.Printf("'%v' nop storei ", $1) }	
+	|	Identifier					{ fmt.Fprintf(&ParserBuf,"'%v' nop storei ", $1) }
+	|	Identifier ',' vars			{ fmt.Fprintf(&ParserBuf,"'%v' nop storei ", $1) }	
 	;
 
 callStmt:
@@ -114,20 +109,20 @@ inline_if_condition:
 
 inline_if_then:
 		T_THEN						{
-										fmt.Printf("&_THEN_END%v fjmp ", IF_Label.Topv())
+										fmt.Fprintf(&ParserBuf,"&_THEN_END%v fjmp ", IF_Label.Topv())
 									}
 	;
 
 inline_if_else:
 		T_ELSE						{
-										fmt.Printf("&_IF_END%v jmp ", IF_Label.Topv())
-										fmt.Printf("_THEN_END%v: ", IF_Label.Topv())
+										fmt.Fprintf(&ParserBuf,"&_IF_END%v jmp ", IF_Label.Topv())
+										fmt.Fprintf(&ParserBuf,"_THEN_END%v: ", IF_Label.Topv())
 									}
 	;
 
 inline_if_end:
 		/* empty */					{
-										fmt.Printf("_IF_END%v: ", IF_Label.Topv())
+										fmt.Fprintf(&ParserBuf,"_IF_END%v: ", IF_Label.Topv())
 										IF_Label.END()
 									}
 	;
@@ -143,27 +138,27 @@ if_BEG:
 
 if_THEN:
 		/* empty */					{
-										fmt.Printf("&_THEN_END%v fjmp ", IF_Label.Topv())
+										fmt.Fprintf(&ParserBuf,"&_THEN_END%v fjmp ", IF_Label.Topv())
 									}
 	;
 
 then_END:
 		/* empty */					{
-										fmt.Printf("&_IF_END%v jmp ", IF_Label.Topv())
-										fmt.Printf("_THEN_END%v: ", IF_Label.Topv())
+										fmt.Fprintf(&ParserBuf,"&_IF_END%v jmp ", IF_Label.Topv())
+										fmt.Fprintf(&ParserBuf,"_THEN_END%v: ", IF_Label.Topv())
 									}
 	;
 
 if_END:
 		/* empty */					{
-										fmt.Printf("_IF_END%v: ", IF_Label.Topv())
+										fmt.Fprintf(&ParserBuf,"_IF_END%v: ", IF_Label.Topv())
 										IF_Label.END()
 									}
 	;
 
 else_BEG:
 		T_ELSE						{ 
-										fmt.Printf("_ELSE_BEG%v: ", IF_Label.Topv())
+										fmt.Fprintf(&ParserBuf,"_ELSE_BEG%v: ", IF_Label.Topv())
 									}
 	;
 
@@ -176,27 +171,58 @@ Stmts_Block:
 		'{' stmts '}'
 	;
 
-expr:   expr '+' expr               { fmt.Print("add ") }
-	|   expr '-' expr               { fmt.Print("sub ") }
-	|   expr '*' expr               { fmt.Print("mul ") }
-	|   expr '/' expr               { fmt.Print("div ") }
-	|   expr '&' expr               { fmt.Print("and ") }
-	|   expr '|' expr               { fmt.Print("or ") }
-	|   expr '%' expr               { fmt.Print("mod ") }
-	|   expr '>' expr               { fmt.Print("gt ") }
-	|   expr '<' expr               { fmt.Print("ls ") }
-	|   expr T_EQ expr           	{ fmt.Print("equl ") }
-	|  	'!' expr           			{ fmt.Print("not ") }
-	|   expr T_AND expr           	{ fmt.Print("and_b ") }
-	|   expr T_OR expr           	{ fmt.Print("or_b ") }
-	|	T_TRUE						{ fmt.Printf("1 ") }
-	|	T_FALSE						{ fmt.Printf("0 ") }
-	|	T_NULL						{ fmt.Printf("nop ") }
-	|   Identifier					{ fmt.Printf("'%v' load ", $1) }
-	|	NumConstant					{ fmt.Printf("%v ", $1) }
-	|   '-' NumConstant %prec UMINUS{ fmt.Printf("-%v ",$2) }
-	|   '-' Identifier %prec UMINUS { fmt.Printf("'%v' load neg ",$2) }
-	|	StringConstant				{ fmt.Printf("'%v' ", $1) }
+while_stmt:
+		while_H fact_Expr while_BEG Stmts_Block while_END
+	;
+
+while_H:
+		T_WHILE						{
+										WHILE_Label.BEG()
+										fmt.Fprintf(&ParserBuf,"_WHILE_BEG%v: ", WHILE_Label.Topv())
+									}
+	;
+
+while_BEG:
+		/* empty */					{
+										fmt.Fprintf(&ParserBuf,"&_WHILE_END%v fjmp ", WHILE_Label.Topv())
+									}
+	;
+
+while_END:
+		/* empty */					{
+										fmt.Fprintf(&ParserBuf,"&_WHILE_BEG%v jmp ", WHILE_Label.Topv())
+										fmt.Fprintf(&ParserBuf,"_WHILE_END%v: ", WHILE_Label.Topv())
+										WHILE_Label.END()
+									}
+	;
+
+breakStmt:
+		T_BREAK 					{
+										fmt.Fprintf(&ParserBuf, "&_WHILE_END%v jmp ", WHILE_Label.Topv())
+									}
+	;
+
+expr:   expr '+' expr               { fmt.Fprintf(&ParserBuf,"add ") }
+	|   expr '-' expr               { fmt.Fprintf(&ParserBuf,"sub ") }
+	|   expr '*' expr               { fmt.Fprintf(&ParserBuf,"mul ") }
+	|   expr '/' expr               { fmt.Fprintf(&ParserBuf,"div ") }
+	|   expr '&' expr               { fmt.Fprintf(&ParserBuf,"and ") }
+	|   expr '|' expr               { fmt.Fprintf(&ParserBuf,"or ") }
+	|   expr '%' expr               { fmt.Fprintf(&ParserBuf,"mod ") }
+	|   expr '>' expr               { fmt.Fprintf(&ParserBuf,"gt ") }
+	|   expr '<' expr               { fmt.Fprintf(&ParserBuf,"ls ") }
+	|   expr T_EQ expr           	{ fmt.Fprintf(&ParserBuf,"equl ") }
+	|  	'!' expr           			{ fmt.Fprintf(&ParserBuf,"not ") }
+	|   expr T_AND expr           	{ fmt.Fprintf(&ParserBuf,"and_b ") }
+	|   expr T_OR expr           	{ fmt.Fprintf(&ParserBuf,"or_b ") }
+	|	T_TRUE						{ fmt.Fprintf(&ParserBuf,"1 ") }
+	|	T_FALSE						{ fmt.Fprintf(&ParserBuf,"0 ") }
+	|	T_NULL						{ fmt.Fprintf(&ParserBuf,"nop ") }
+	|   Identifier					{ fmt.Fprintf(&ParserBuf,"'%v' load ", $1) }
+	|	NumConstant					{ fmt.Fprintf(&ParserBuf,"%v ", $1) }
+	|   '-' NumConstant %prec UMINUS{ fmt.Fprintf(&ParserBuf,"-%v ",$2) }
+	|   '-' Identifier %prec UMINUS { fmt.Fprintf(&ParserBuf,"'%v' load neg ",$2) }
+	|	StringConstant				{ fmt.Fprintf(&ParserBuf,"'%v' ", $1) }
 	| 	callExpr          			{ /* empty */ }
 	|	func_def					{ /* empty */ }
 	|	gen_def						{ /* empty */ }
@@ -205,7 +231,7 @@ expr:   expr '+' expr               { fmt.Print("add ") }
 	;
 
 callExpr:
-		Identifier '(' call_args ')'{ fmt.Printf("'%v' call ", $1) }
+		Identifier '(' call_args ')'{ fmt.Fprintf(&ParserBuf,"'%v' call ", $1) }
 	;
 
 call_args:
@@ -220,30 +246,30 @@ call_arg:
 
 named_func_def:
 		named_func_h '(' func_args ')' '{' func_body '}'
-									{ fmt.Printf("endfunc storei ") }
+									{ fmt.Fprintf(&ParserBuf,"endfunc storei ") }
 	;
 
 named_func_h:
-		FuncDefined Identifier		{ fmt.Printf("'%v' func ",$2) }
+		FuncDefined Identifier		{ fmt.Fprintf(&ParserBuf,"'%v' func ",$2) }
 	;
 
 func_def:
 		func_def_h '(' func_args ')' '{' func_body '}'
-									{ fmt.Printf("endfunc ") }
+									{ fmt.Fprintf(&ParserBuf,"endfunc ") }
 	;
 
 func_def_h:
-		FuncDefined					{ fmt.Printf("func ") }
+		FuncDefined					{ fmt.Fprintf(&ParserBuf,"func ") }
 	;
 
 func_args:
 		/* empty */					{ /* empty */ }
-	|	Identifier func_arg			{ fmt.Printf("'%v' arg ", $1) }
+	|	Identifier func_arg			{ fmt.Fprintf(&ParserBuf,"'%v' arg ", $1) }
 	;
 
 func_arg:
 		/* empty */					{ /* empty */ }
-	|	func_arg ',' Identifier		{ fmt.Printf("'%v' arg ", $3) }
+	|	func_arg ',' Identifier		{ fmt.Fprintf(&ParserBuf,"'%v' arg ", $3) }
 	;
 
 func_body:
@@ -252,11 +278,11 @@ func_body:
 
 named_gen_def:
 		named_gen_h '(' func_args ')' '{' func_body '}'
-									{ fmt.Printf("endfunc storei func '__gen__' load callx endfunc ret endfunc storei ") }
+									{ fmt.Fprintf(&ParserBuf,"endfunc storei func '__gen__' load callx endfunc ret endfunc storei ") }
 	;
 
 named_gen_h:
-		GenDefined Identifier		{ fmt.Printf("'%v' func '__gen__' func ",$2) }
+		GenDefined Identifier		{ fmt.Fprintf(&ParserBuf,"'%v' func '__gen__' func ",$2) }
 	;
 
 gen_def:
@@ -272,17 +298,17 @@ gen_def:
 												endfunc ret
 											endfunc
 										*/
-										fmt.Printf("endfunc storei func '__gen__' load callx endfunc ret endfunc")
+										fmt.Fprintf(&ParserBuf,"endfunc storei func '__gen__' load callx endfunc ret endfunc")
 									}
 	;
 
 gen_def_h:
-		GenDefined					{ fmt.Printf("func '__gen__' func ") }
+		GenDefined					{ fmt.Fprintf(&ParserBuf,"func '__gen__' func ") }
 	;
 
 fif_code:
 		T_FIF '{' fif_block '}'		{
-										fmt.Printf("%v ",
+										fmt.Fprintf(&ParserBuf,"%v ",
 											strings.Join(
 												reverse(fif_code_buf), " "))
 										fif_code_buf = []string{}

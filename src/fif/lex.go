@@ -1,10 +1,9 @@
-package main
+package fif
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -29,6 +28,7 @@ var reserved_words = map[string]int{
 	"==":          T_EQ,
 	"for":         T_FOR,
 	"while":       T_WHILE,
+	"break":       T_BREAK,
 	"goto":        T_GOTO,
 	"var":         T_VAR,
 	"null":        T_NULL,
@@ -211,6 +211,7 @@ func (l *lex) next() byte {
 
 // Error satisfies yyLexer.
 func (l *lex) Error(s string) {
-	l.err = errors.New(s)
-	fmt.Fprintf(os.Stderr, "[ERROR]:%v pos:[L:%v,P:%v] token:[%v]", s, l.line+1, l.linepos, l.lastT)
+	errstr := fmt.Sprintf("[%v]: pos:[L:%v,P:%v] token:[%v]", s, l.line+1, l.linepos, l.lastT)
+	l.err = errors.New(errstr)
+	// fmt.Fprintf(os.Stderr, "[ERROR]: pos:[L:%v,P:%v] token:[%v]", s, l.line+1, l.linepos, l.lastT)
 }
