@@ -62,6 +62,7 @@ stmt:	assignStmt
 	|	gotoStmt
 	|	breakStmt
 	|	varStmt
+	|	obj_propStmt
 	;
 
 assignStmt:
@@ -93,6 +94,16 @@ varStmt:
 vars:	/* empty */
 	|	Identifier					{ fmt.Fprintf(&ParserBuf,"'%v' nop storei ", $1) }
 	|	Identifier ',' vars			{ fmt.Fprintf(&ParserBuf,"'%v' nop storei ", $1) }	
+	;
+
+obj_propStmt:
+		Identifier obj_propStmt_def { fmt.Fprintf(&ParserBuf,"stack_reverse '%v' load call ", $1) }
+	|	obj_expr obj_propStmt_def	{ fmt.Fprintf(&ParserBuf,"stack_reverse call ") }
+	;
+
+obj_propStmt_def:
+		'.' Identifier '=' expr
+									{ fmt.Fprintf(&ParserBuf,"'%v' 'set' ", $2) }
 	;
 
 callStmt:
@@ -218,11 +229,8 @@ expr:   expr '+' expr               { fmt.Fprintf(&ParserBuf,"add ") }
 	|	T_TRUE						{ fmt.Fprintf(&ParserBuf,"1 ") }
 	|	T_FALSE						{ fmt.Fprintf(&ParserBuf,"0 ") }
 	|	T_NULL						{ fmt.Fprintf(&ParserBuf,"nop ") }
-	|   Identifier					{ fmt.Fprintf(&ParserBuf,"'%v' load ", $1) }
-	|	NumConstant					{ fmt.Fprintf(&ParserBuf,"%v ", $1) }
-	|   '-' NumConstant %prec UMINUS{ fmt.Fprintf(&ParserBuf,"-%v ",$2) }
-	|   '-' Identifier %prec UMINUS { fmt.Fprintf(&ParserBuf,"'%v' load neg ",$2) }
-	|	StringConstant				{ fmt.Fprintf(&ParserBuf,"'%v' ", $1) }
+	|   const_expr					{ /* empty */ }
+	|	obj_expr					{ /* empty */ }
 	| 	callExpr          			{ /* empty */ }
 	|	func_def					{ /* empty */ }
 	|	gen_def						{ /* empty */ }
@@ -230,8 +238,26 @@ expr:   expr '+' expr               { fmt.Fprintf(&ParserBuf,"add ") }
 	|	'(' expr ')'                { /* empty */ }
 	;
 
+obj_expr:
+		Identifier					{ fmt.Fprintf(&ParserBuf,"'%v' load ", $1) }
+	|	Identifier '.' get_obj_expr	{ fmt.Fprintf(&ParserBuf,"'%v' load call ", $1) }
+	|	obj_expr '.' get_obj_expr	{ fmt.Fprintf(&ParserBuf,"call ") }
+	;
+
+get_obj_expr:
+		Identifier					{ fmt.Fprintf(&ParserBuf,"'get' '%v' ", $1) }
+	;
+
+const_expr:
+		NumConstant					{ fmt.Fprintf(&ParserBuf,"%v ", $1) }
+	|   '-' NumConstant %prec UMINUS{ fmt.Fprintf(&ParserBuf,"-%v ",$2) }
+	|   '-' Identifier %prec UMINUS { fmt.Fprintf(&ParserBuf,"'%v' load neg ",$2) }
+	|	StringConstant				{ fmt.Fprintf(&ParserBuf,"'%v' ", $1) }
+	;
+
 callExpr:
 		Identifier '(' call_args ')'{ fmt.Fprintf(&ParserBuf,"'%v' call ", $1) }
+	|	callExpr '(' call_args ')'	{ fmt.Fprintf(&ParserBuf,"swap call ") }
 	;
 
 call_args:

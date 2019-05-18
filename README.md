@@ -56,6 +56,24 @@ gen counter2(){
 }
 ```
 
+### Functional
+```go
+func repeat(fn){
+    return func(num){
+        return fn(fn(num))
+    }
+}
+
+func twice(num){
+    return num * 2
+}
+
+twice2 = repeat(twice)
+
+print(twice2(10))
+print(repeat(twice)(10))
+```
+
 # fif-code
 
 ### Usage

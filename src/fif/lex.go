@@ -12,6 +12,7 @@ import (
 
 var idRegex = regexp.MustCompile("[\\w\\$_]")
 var needLook = regexp.MustCompile("[=+\\-*/<>]")
+var breakWords = regexp.MustCompile("[[\\](){}.;\\s]")
 var reserved_words = map[string]int{
 	"func":        FuncDefined,
 	"gen":         GenDefined,
@@ -79,7 +80,7 @@ func (l *lex) scanNormal(lval *FifSymType) int {
 		case idRegex.Match([]byte{b}):
 			l.backup()
 			return l.scanIdentifier(lval)
-		case needLook.Match([]byte{b}) && !l.nxtIsBreakWord():
+		case needLook.Match([]byte{b}) && l.nxtMatch(needLook):
 			l.backup()
 			return l.scanOpt(lval)
 		default:
@@ -182,12 +183,10 @@ func (l *lex) scanOpt(lval *FifSymType) int {
 	return LexError
 }
 
-var breakWords = regexp.MustCompile("[[\\](){}.;\\s]")
-
-func (l *lex) nxtIsBreakWord() bool {
+func (l *lex) nxtMatch(reg *regexp.Regexp) bool {
 	nxt := l.next()
 	l.backup()
-	return breakWords.Match([]byte{nxt})
+	return reg.Match([]byte{nxt})
 }
 
 func (l *lex) backup() {

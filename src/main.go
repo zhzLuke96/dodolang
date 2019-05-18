@@ -14,19 +14,26 @@ import (
 func main() {
 	// REPL()
 	fifmod := flag.Bool("fif", false, "just parse to fifcode. not exec code.")
+	debugmod := flag.Bool("debug", false, "run one line fifthcode.")
 	flag.Parse()
 	args := flag.Args()
 	if len(args) == 0 {
 		REPL()
 	} else {
-		codefile, err := ReadAll(args[0])
-		if err != nil {
-			log.Fatal(err)
+		var code []byte
+		var err error
+		if *debugmod {
+			code = []byte(args[0])
+		} else {
+			code, err = ReadAll(args[0])
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 		if *fifmod {
-			fmt.Println(fif.ParseFifth(codefile))
+			fmt.Println(fif.ParseFifth(code))
 		} else {
-			err = ExecFifthCode(codefile)
+			err = ExecFifthCode(code)
 			if err != nil {
 				log.Fatal(err)
 			}
