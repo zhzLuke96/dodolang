@@ -30,6 +30,8 @@ func main() {
 				log.Fatal(err)
 			}
 		}
+		// clear comment
+		code = clearComment(code)
 		if *fifmod {
 			fmt.Println(fif.ParseFifth(code))
 		} else {
