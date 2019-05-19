@@ -74,6 +74,34 @@ print(twice2(10))
 print(repeat(twice)(10))
 ```
 
+#### Y combinator
+```go
+var Y,F
+Y = func(f){
+    (func(x) {
+        x(x)
+    })(func(x){
+        f(func(y){
+            x(x)(y)
+        })
+    })
+}
+
+
+F = func(g){
+    func(n){
+        if n == 0 {
+            return 1
+        } else {
+            return n * g(n-1)
+        }
+    }
+}
+
+FACT = Y(F)
+FACT(5) // =>  120
+```
+
 # fif-code
 
 ### Usage

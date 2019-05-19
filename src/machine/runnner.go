@@ -124,6 +124,8 @@ func (r *Runner) Eval(expr string) {
 		r.load()
 	case "call":
 		r.call()
+	case "callr":
+		r.callr()
 	case "callx":
 		r.callx()
 	case "ret":
@@ -523,6 +525,22 @@ func (r *Runner) callx() {
 		}
 	} else if fn, ok := nameOrFn.(*Program); ok {
 		r._callx(fn)
+	}
+}
+
+func (r *Runner) callr() {
+	nameOrFn := r.pop()
+
+	r.stackReverse()
+
+	if fnName, ok := nameOrFn.(string); ok {
+		if fn, ok := r.CurProgram().Env.get(fnName); ok {
+			if f, ok := fn.(*Program); ok {
+				r._call(f)
+			}
+		}
+	} else if fn, ok := nameOrFn.(*Program); ok {
+		r._call(fn)
 	}
 }
 
