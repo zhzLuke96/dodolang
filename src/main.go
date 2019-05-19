@@ -18,7 +18,11 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 	if len(args) == 0 {
-		REPL()
+		if *fifmod {
+			fifREPL()
+		} else {
+			fifthREPL()
+		}
 	} else {
 		var code []byte
 		var err error
