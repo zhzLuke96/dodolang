@@ -38,6 +38,7 @@ var WHILE_Label = NewLabelStack()
 code:
 		/* empty */
 	|	code S						{ fmt.Fprintf(&ParserBuf,$2) }
+	|	code ';' S					{ fmt.Fprintf(&ParserBuf,$3) }
 	;
 
 S	:	/* empty */					{ $$ = "" }
