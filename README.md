@@ -1,134 +1,69 @@
-# fifth
-🛸Coding for code.
+![dodo bird](https://upload.wikimedia.org/wikipedia/commons/9/9b/Frohawk_Dodo.png)
+# dodolang
+![LICENSE badge](https://img.shields.io/badge/license-GPL3.0-blue)
+![build badge](https://img.shields.io/badge/build-error-red)
+> Program <==> Data
 
-# Program <==> Data
-> Program Is Data, Program Operating Data
+🛸Do What U Want To Do.
 
-# build
-```
-bash build_parser.sh && bash build.sh
-```
 
-***requirement***
+# Overview
+📑Game Engine Internal Script.
+
+# Index
+- [dodolang](#dodolang)
+- [Overview](#overview)
+- [Index](#index)
+- [Install](#install)
+- [Build](#build)
+- [Usage](#usage)
+- [Changelog](#changelog)
+- [LICENSE](#license)
+
+# Install
+download form [releases](#) or build form source.
+
+***build requirement***
 - [goyacc](https://godoc.org/golang.org/x/tools/cmd/goyacc)
+
+# Build
+```
+# go get dodolang
+go get github.com/zhzluke96/dodolang/dolang
+go get github.com/zhzluke96/dodolang/dodolang
+
+cd $(go env GOPATH)/src/github.com/zhzluke96/dodolang/dodolang/
+./build.sh
+
+# build tools...
+```
 
 # Usage
 ```go
 func print(text){
-    __fifcode__ {
+    __do__ {
         'text' load print
     }
     return
 }
 
-func sum(a,b){
+func add(a,b){
     return a+b 
 }
 
 func main(){
     a = 10
     b = -8.5
-    res = sum(a,b)
+    res = add(a,b)
     print(res)
 }
 
 main()
 ```
 
-# generator
-```go
-gen counter1(num){
-    while(1){
-        getv = yield num
-        
-        if getv == null {
-            num = num + 1
-        } else {
-            num = num + getv
-        }
-    }
-}
-
-gen counter2(){
-    num = 0
-    while true{
-        yield num
-        num = num + 1
-    }
-}
-```
-
-# Functional
-```go
-func repeat(fn){
-    return func(num){
-        return fn(fn(num))
-    }
-}
-
-func twice(num){
-    return num * 2
-}
-
-twice2 = repeat(twice)
-
-print(twice2(10))
-print(repeat(twice)(10))
-```
-
-## Y combinator
-```go
-var Y,F
-Y = func(f){
-    (func(x) {
-        x(x)
-    })(func(x){
-        f(func(y){
-            x(x)(y)
-        })
-    })
-}
-
-
-F = func(g){
-    func(n){
-        if n == 0 {
-            return 1
-        } else {
-            return n * g(n-1)
-        }
-    }
-}
-
-FACT = Y(F)
-FACT(5) // =>  120
-```
-
-# code gen (macro)
-> come soon
-```go
-macro _if{
-    ($test?$texpr:$fexpr) => {
-        if $test {
-            return literal!($texpr)
-        } else {
-            return literal!($fexpr)
-        }
-    }
-}
-a = 1
-b = 0
-// codegen call
-_if{a>b?print(a):print(b)}
-// => FUNCTION [print(a)]
-
-// macro call
-_if!{a>b?print(a):print(b)}
-// => 1
-```
-
-> more macro, not more always better.
-> <br>but, more sweet.
+# Changelog
+- rename to dolang & dodolang
+- Reorganization working directory
 
 # LICENSE
 GPL-3.0

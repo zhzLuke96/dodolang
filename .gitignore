@@ -15,9 +15,12 @@
 *.o
 
 # goyacc
-fif_parser.go
+*_parser.go
 *.output
 
-# test fif
-*._fif
+# test file
+*._dodo
 u/
+
+# local bash file
+updata.sh

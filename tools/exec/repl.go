@@ -7,35 +7,35 @@ import (
 	"os"
 	"strings"
 
-	"./fif"
-	"./machine"
+	"github.com/zhzluke96/dodolang/dodolang"
+	"github.com/zhzluke96/dodolang/dolang"
 )
 
-func fifREPL() {
-	fmt.Print("[fif code]\n")
+func dodolangEPL() {
+	fmt.Print("[dodolang code]\n")
 	fmt.Print("Hit CTRL+C or type \"exit\" or \"quit\" to quit.")
-	vm := machine.NewFifVM([]string{})
-	runner := machine.Runner{vm}
+	vm := dodolang.NewDodoVM([]string{})
+	runner := dodolang.Runner{vm}
 	for {
 		fmt.Print("\n>>> ")
 		reader := bufio.NewReader(os.Stdin)
 		data, _, _ := reader.ReadLine()
-		machine.InputContent = string(data)
+		dodolang.InputContent = string(data)
 		if strings.Trim(string(data), " ") == "quit" {
 			return
 		}
-		code := machine.GetTokenArr()
+		code := dodolang.GetTokenArr()
 		runner.VM.CurrentFrame.Func.Code = labelLoad(code)
 		runner.VM.CurrentFrame.Func.PC = 0
 		runner.Run()
 	}
 }
 
-func fifthREPL() {
-	fmt.Print("[fifth code]\n")
+func dolangREPL() {
+	fmt.Print("[dolang code]\n")
 	fmt.Print("Hit CTRL+C or type \"quit\" to quit.")
-	vm := machine.NewFifVM([]string{})
-	runner := machine.Runner{vm}
+	vm := dodolang.NewDodoVM([]string{})
+	runner := dodolang.Runner{vm}
 	for {
 		fmt.Print("\n>>> ")
 		reader := bufio.NewReader(os.Stdin)
@@ -44,14 +44,14 @@ func fifthREPL() {
 			return
 		}
 
-		fifcode, err := fif.ParseFifth(data)
+		dolangcode, err := dolang.ParseDolang(data)
 		// fmt.Printf("[LOG] pcode = %v\n", pcode)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		machine.InputContent = fifcode
-		code := machine.GetTokenArr()
+		dodolang.InputContent = dolangcode
+		code := dodolang.GetTokenArr()
 		runner.VM.CurrentFrame.Func.Code = labelLoad(code)
 		runner.VM.CurrentFrame.Func.PC = 0
 		runner.Run()

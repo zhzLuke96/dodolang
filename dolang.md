@@ -1,7 +1,15 @@
-# fif-code
-> 本身作为底层语言，forth已经足够了，fif在为基本的forth提供了更多的函数支持和抽象
+# do-code
+> 本身作为底层语言，forth已经足够了，dolang在此基础上提供了更多的函数支持和抽象
 
-### Usage
+## Index
+- [do-code](#do-code)
+	- [Index](#index)
+	- [Usage](#usage)
+	- [Closure](#closure)
+	- [Immediately Invoked Function Expression](#immediately-invoked-function-expression)
+	- [oop](#oop)
+
+## Usage
 ```
 Hit CTRL+C or type "exit" or "quit" to quit.
 >>> "hello world"
@@ -16,7 +24,7 @@ hello world
 144
 ```
 
-### Closure
+## Closure
 ```
 "main" func 
 	"count1"
@@ -40,7 +48,7 @@ endfunc store
 "main" call
 ```
 
-### Immediately Invoked Function Expression
+## Immediately Invoked Function Expression
 ```
 "main" func
 	&end jmp
@@ -65,7 +73,7 @@ endfunc store
 "main" call
 ```
 
-### oop
+## oop
 ```
 "newMap" func 
 	func 

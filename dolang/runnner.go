@@ -1,4 +1,4 @@
-package machine
+package dodolang
 
 import (
 	"bytes"
@@ -30,7 +30,7 @@ func (f *fifNumber) String() string {
 }
 
 type Runner struct {
-	VM *fifVM
+	VM *dodoVM
 }
 
 func (r *Runner) CurProgram() *Program {

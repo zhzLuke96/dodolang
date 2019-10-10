@@ -1,0 +1,56 @@
+func print(text){
+    __fifcode__ {
+        'text' load println
+    }
+    return
+}
+
+gen coro3(num){
+    num = yield num + 1
+    num = yield num + 1
+    num = yield num + 1
+    num = yield num + 1
+}
+
+gen coro4(num){
+    while(1){
+        getv = yield num
+        
+        if getv == null {
+            num = num + 1
+        } else {
+            num = num + getv
+        }
+    }
+}
+
+gen count(){
+    num = 0
+    while true{
+        yield num
+        num = num + 1
+    }
+}
+
+func main(){
+    co1 = coro3()
+    print(co1(5))
+    print(co1(15))
+    print("   =====")
+
+    co2 = coro4()
+    print(co2(5))
+    print(co2(3))
+    print(co2(1))
+    print(co2(null))
+    print("   =====")
+
+    counter = count()
+    print(counter())
+    print(counter())
+    print(counter())
+    print(counter())
+    print("end")
+}
+
+main()

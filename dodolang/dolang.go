@@ -1,16 +1,16 @@
-package fif
+package dolang
 
 import "bytes"
 import "regexp"
 
 var ParserBuf bytes.Buffer
 
-func ParseFifth(fifthCode []byte) (string, error) {
-	err := Parse(fifthCode)
+func ParseDolang(doCode []byte) ([]byte, error) {
+	err := Parse(doCode)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return ParserBuf.String(), nil
+	return ParserBuf.Bytes(), nil
 }
 
 var argRegex = regexp.MustCompile(" arg")

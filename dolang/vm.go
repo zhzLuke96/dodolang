@@ -1,8 +1,4 @@
-package machine
-
-import (
-	"../stack"
-)
+package dodolang
 
 type Program struct {
 	Code []string
@@ -82,19 +78,19 @@ func (v *VMEnv) setUpper(key string, val interface{}) {
 	v.Super.set(key, val, true)
 }
 
-type fifVM struct {
-	Data         stack.Stack
+type dodoVM struct {
+	Data         Stack
 	CurrentFrame *StackFrame
 }
 
-func NewFifVM(code []string) *fifVM {
-	return &fifVM{
-		Data:         stack.Stack{},
+func NewDodoVM(code []string) *dodoVM {
+	return &dodoVM{
+		Data:         Stack{},
 		CurrentFrame: NewStackFrame(nil, &Program{code, NewVMEnv(nil), 0}),
 	}
 }
 
-func (f *fifVM) Pop() interface{} {
+func (f *dodoVM) Pop() interface{} {
 	v, err := f.Data.Pop()
 	if err != nil {
 		return nil
@@ -102,16 +98,16 @@ func (f *fifVM) Pop() interface{} {
 	return v
 }
 
-func (f *fifVM) Push(v interface{}) {
+func (f *dodoVM) Push(v interface{}) {
 	f.Data.Push(v)
 }
 
-func (f *fifVM) Top() interface{} {
+func (f *dodoVM) Top() interface{} {
 	val, _ := f.Data.Top()
 	return val
 }
 
-func (f *fifVM) Run() {
+func (f *dodoVM) Run() {
 	r := Runner{f}
 	r.Run()
 }

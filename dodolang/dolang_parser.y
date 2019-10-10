@@ -1,5 +1,5 @@
 %{
-package fif
+package dolang
 
 import "fmt"
 
@@ -14,13 +14,13 @@ var WHILE_Label = NewLabelStack()
 }
 
 %type <val> any_T
-%type <code> stmts stmt assignStmt labelStmt gotoStmt retStmt yeildStmt varStmt vars obj_propStmt callStmt inline_if_stmt inline_if_condition inline_if_then inline_if_else inline_if_end if_stmt if_BEG if_THEN then_END if_END else_BEG fact_Expr Stmts_Block while_stmt while_H while_BEG while_END breakStmt expr obj_expr get_obj_expr const_expr callExpr call_args call_arg named_func_def func_def func_args func_arg_list func_body named_gen_def gen_def fif_code fif_block S
+%type <code> stmts stmt assignStmt labelStmt gotoStmt retStmt yeildStmt varStmt vars obj_propStmt callStmt inline_if_stmt inline_if_condition inline_if_then inline_if_else inline_if_end if_stmt if_BEG if_THEN then_END if_END else_BEG fact_Expr Stmts_Block while_stmt while_H while_BEG while_END breakStmt expr obj_expr get_obj_expr const_expr callExpr call_args call_arg named_func_def func_def func_args func_arg_list func_body named_gen_def gen_def do_code do_block S
 
 %token LexError
 %token <val> Identifier StringConstant NumConstant
 %token <val> FuncDefined FuncReturn GenDefined CoroDefined
 %token <val> T_IF T_ELSE T_THEN T_TRUE T_FALSE T_GOTO 
-%token <val> T_FOR T_WHILE T_FIF T_BREAK
+%token <val> T_FOR T_WHILE T_DO T_BREAK
 %token <val> T_EQ T_AND T_OR T_GE T_LE
 %token <val> T_VAR T_NULL T_YIELD
 
@@ -58,7 +58,7 @@ stmt:	assignStmt					{ $$ = $1 }
 	|	while_stmt					{ $$ = $1 }
 	|	named_func_def				{ $$ = $1 }
 	|	named_gen_def				{ $$ = $1 }
-	|	fif_code					{ $$ = $1 }
+	|	do_code					{ $$ = $1 }
 	|	labelStmt					{ $$ = $1 }
 	|	gotoStmt					{ $$ = $1 }
 	|	breakStmt					{ $$ = $1 }
@@ -348,15 +348,15 @@ gen_def:
 									}
 	;
 
-fif_code:
-		T_FIF '{' fif_block '}'		{
+do_code:
+		T_DO '{' do_block '}'		{
 										$$ = $3
 									}
 	;
 
-fif_block:
+do_block:
 		/* empty */					{ $$ = "" }
-	|	any_T fif_block				{ $$ = fmt.Sprintf("%v %v", $1, $2) }
+	|	any_T do_block				{ $$ = fmt.Sprintf("%v %v", $1, $2) }
 	;
 
 any_T:

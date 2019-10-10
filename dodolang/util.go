@@ -1,4 +1,4 @@
-package fif
+package dolang
 
 import (
 	"strconv"

@@ -1,6 +1,9 @@
 package main
 
-import "strconv"
+import (
+	"regexp"
+	"strconv"
+)
 
 func cutFuncBody(code []string) []string {
 	pos := 0
@@ -59,5 +62,14 @@ func labelLoad(text []string) []string {
 			}
 		}
 	}
+	return ret
+}
+
+var lineComment = regexp.MustCompile("\\/\\/[^\\n]*\\n")
+var mulitLineComment = regexp.MustCompile("\\/\\*[\\s\\S]*\\*\\/")
+
+func clearComment(code []byte) []byte {
+	ret := lineComment.ReplaceAll(code, []byte(""))
+	ret = mulitLineComment.ReplaceAll(ret, []byte(""))
 	return ret
 }

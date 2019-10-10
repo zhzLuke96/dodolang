@@ -1,4 +1,4 @@
-package fif
+package dolang
 
 import (
 	"bytes"
@@ -14,31 +14,31 @@ var idRegex = regexp.MustCompile("[\\w\\$_]")
 var needLook = regexp.MustCompile("[=+\\-*/<>]")
 var breakWords = regexp.MustCompile("[[\\](){}.;\\s]")
 var reserved_words = map[string]int{
-	"func":        FuncDefined,
-	"gen":         GenDefined,
-	"yield":       T_YIELD,
-	"coro":        CoroDefined,
-	"return":      FuncReturn,
-	"if":          T_IF,
-	"else":        T_ELSE,
-	"then":        T_THEN,
-	"true":        T_TRUE,
-	"false":       T_FALSE,
-	">=":          T_GE,
-	"<=":          T_LE,
-	"==":          T_EQ,
-	"for":         T_FOR,
-	"while":       T_WHILE,
-	"break":       T_BREAK,
-	"goto":        T_GOTO,
-	"var":         T_VAR,
-	"null":        T_NULL,
-	"__fifcode__": T_FIF,
+	"func":   FuncDefined,
+	"gen":    GenDefined,
+	"yield":  T_YIELD,
+	"coro":   CoroDefined,
+	"return": FuncReturn,
+	"if":     T_IF,
+	"else":   T_ELSE,
+	"then":   T_THEN,
+	"true":   T_TRUE,
+	"false":  T_FALSE,
+	">=":     T_GE,
+	"<=":     T_LE,
+	"==":     T_EQ,
+	"for":    T_FOR,
+	"while":  T_WHILE,
+	"break":  T_BREAK,
+	"goto":   T_GOTO,
+	"var":    T_VAR,
+	"null":   T_NULL,
+	"__do__": T_DO,
 }
 
 func Parse(input []byte) error {
 	l := newLex(input)
-	_ = FifParse(l)
+	_ = DolangParse(l)
 	return l.err
 }
 
@@ -58,11 +58,11 @@ func newLex(input []byte) *lex {
 }
 
 // Lex satisfies yyLexer.
-func (l *lex) Lex(lval *FifSymType) int {
+func (l *lex) Lex(lval *DolangSymType) int {
 	return l.scanNormal(lval)
 }
 
-func (l *lex) scanNormal(lval *FifSymType) int {
+func (l *lex) scanNormal(lval *DolangSymType) int {
 	for b := l.next(); b != 0; b = l.next() {
 		switch {
 		case b == '\n':
@@ -102,7 +102,7 @@ var escape = map[byte]byte{
 	't':  '\t',
 }
 
-func (l *lex) scanString(lval *FifSymType, match byte) int {
+func (l *lex) scanString(lval *DolangSymType, match byte) int {
 	buf := bytes.NewBuffer(nil)
 	for b := l.next(); b != 0; b = l.next() {
 		switch b {
@@ -124,7 +124,7 @@ func (l *lex) scanString(lval *FifSymType, match byte) int {
 	return LexError
 }
 
-func (l *lex) scanNum(lval *FifSymType) int {
+func (l *lex) scanNum(lval *DolangSymType) int {
 	buf := bytes.NewBuffer(nil)
 	for {
 		b := l.next()
@@ -146,7 +146,7 @@ func (l *lex) scanNum(lval *FifSymType) int {
 	}
 }
 
-func (l *lex) scanIdentifier(lval *FifSymType) int {
+func (l *lex) scanIdentifier(lval *DolangSymType) int {
 	buf := bytes.NewBuffer(nil)
 	for {
 		b := l.next()
@@ -167,7 +167,7 @@ func (l *lex) scanIdentifier(lval *FifSymType) int {
 	}
 }
 
-func (l *lex) scanOpt(lval *FifSymType) int {
+func (l *lex) scanOpt(lval *DolangSymType) int {
 	buf := bytes.NewBuffer(nil)
 	b := l.next()
 	buf.WriteByte(b)

@@ -1,4 +1,4 @@
-package machine
+package dodolang
 
 var (
 	InputContent = ""

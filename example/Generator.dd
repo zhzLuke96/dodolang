@@ -1,0 +1,26 @@
+func print(text){
+    __fifcode__ {
+        'text' load println
+    }
+    return
+}
+
+gen count(){
+    var num
+    num = 0
+    while true{
+        yield num
+        num = num + 1
+    }
+}
+
+
+func main(){
+    counter = count()
+    print(counter())
+    print(counter())
+    print(counter())
+    print(counter())
+}
+
+main()

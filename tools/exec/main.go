@@ -7,13 +7,13 @@ import (
 	"log"
 	"os"
 
-	"./fif"
-	"./machine"
+	"github.com/zhzluke96/dodolang/dodolang"
+	"github.com/zhzluke96/dodolang/dolang"
 )
 
 func main() {
 	// REPL()
-	fifmod := flag.Bool("fif", false, "just parse to fifcode. not exec code.")
+	fifmod := flag.Bool("do", false, "just parse to fifcode. not exec code.")
 	debugmod := flag.Bool("debug", false, "run one line fifthcode.")
 	flag.Parse()
 	args := flag.Args()
@@ -37,7 +37,7 @@ func main() {
 		// clear comment
 		code = clearComment(code)
 		if *fifmod {
-			fmt.Println(fif.ParseFifth(code))
+			fmt.Println(dolang.ParseFifth(code))
 		} else {
 			err = ExecFifthCode(code)
 			if err != nil {
@@ -56,16 +56,16 @@ func ReadAll(filePth string) ([]byte, error) {
 }
 
 func RunfifCode(code string) {
-	machine.InputContent = code
-	codearr := machine.GetTokenArr()
+	dodolang.InputContent = code
+	codearr := dodolang.GetTokenArr()
 
-	vm := machine.NewFifVM(labelLoad(codearr))
-	runner := machine.Runner{vm}
+	vm := dodolang.NewFifVM(labelLoad(codearr))
+	runner := dodolang.Runner{vm}
 	runner.Run()
 }
 
 func ExecFifthCode(code []byte) error {
-	fifcode, err := fif.ParseFifth(code)
+	fifcode, err := dolang.ParseFifth(code)
 	// fmt.Printf("[LOG] pcode = %v\n", pcode)
 	if err != nil {
 		return err
@@ -73,22 +73,3 @@ func ExecFifthCode(code []byte) error {
 	RunfifCode(fifcode)
 	return nil
 }
-
-// func ParseFifthCode(code string) (string, error) {
-// 	cmd := exec.Command("./fif_parser.exe")
-// 	cmd.Stdin = strings.NewReader(code + "\000")
-
-// 	var out bytes.Buffer
-// 	var serr bytes.Buffer
-// 	cmd.Stdout = &out
-// 	cmd.Stderr = &serr
-
-// 	err := cmd.Run()
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	if serr.Len() != 0 {
-// 		return out.String(), fmt.Errorf(serr.String())
-// 	}
-// 	return out.String(), nil
-// }
