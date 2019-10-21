@@ -5,6 +5,7 @@
   - [Functional](#functional)
   - [Y combinator](#y-combinator)
   - [Code Gen (macro)](#code-gen-macro)
+- [BigNumber](#bignumber)
 - [more](#more)
 
 # How to Use
@@ -125,6 +126,11 @@ _if!{a>b?print(a):print(b)}
 
 > more macro, not more always better.
 > <br>but, more sweet.
+
+# BigNumber
+```
+println(10000000000000 / 13)
+```
 
 # more
 come soon

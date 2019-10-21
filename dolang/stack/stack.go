@@ -1,4 +1,4 @@
-package dodolang
+package stack
 
 import "errors"
 
@@ -14,6 +14,14 @@ func (s *Stack) IsEmpty() bool {
 
 func (s *Stack) Cap() int {
 	return cap(*s)
+}
+
+func (s *Stack) Take(idx int) (interface{}, bool) {
+	length := len(*s)
+	if length == 0 || length <= idx {
+		return nil, false
+	}
+	return (*s)[s.Len()-1-idx], true
 }
 
 func (s *Stack) Reverse() {

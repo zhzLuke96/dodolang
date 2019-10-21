@@ -1,5 +1,5 @@
 %{
-package dolang
+package parser
 
 import "fmt"
 
@@ -21,7 +21,7 @@ var WHILE_Label = NewLabelStack()
 %token <val> FuncDefined FuncReturn GenDefined CoroDefined
 %token <val> T_IF T_ELSE T_THEN T_TRUE T_FALSE T_GOTO 
 %token <val> T_FOR T_WHILE T_DO T_BREAK
-%token <val> T_EQ T_AND T_OR T_GE T_LE
+%token <val> T_EQ T_AND T_OR T_XOR T_GE T_LE
 %token <val> T_VAR T_NULL T_YIELD
 
 %left '='
@@ -30,7 +30,7 @@ var WHILE_Label = NewLabelStack()
 %left '+'  '-'
 %left '*'  '/'  '%'
 %left '<' '>'
-%left T_EQ T_AND T_OR T_GE T_LE
+%left T_EQ T_AND T_OR T_XOR T_GE T_LE
 %right UMINUS
 
 %%
@@ -231,15 +231,14 @@ expr:   expr '+' expr               { $$ = fmt.Sprintf("%v %v add", $1, $3) }
 	|   expr '-' expr               { $$ = fmt.Sprintf("%v %v sub", $1, $3) }
 	|   expr '*' expr               { $$ = fmt.Sprintf("%v %v mul", $1, $3) }
 	|   expr '/' expr               { $$ = fmt.Sprintf("%v %v div", $1, $3) }
-	|   expr '&' expr               { $$ = fmt.Sprintf("%v %v and", $1, $3) }
-	|   expr '|' expr               { $$ = fmt.Sprintf("%v %v or", $1, $3) }
 	|   expr '%' expr               { $$ = fmt.Sprintf("%v %v mod", $1, $3) }
-	|   expr '>' expr               { $$ = fmt.Sprintf("%v %v gt", $1, $3) }
-	|   expr '<' expr               { $$ = fmt.Sprintf("%v %v ls", $1, $3) }
+	|   expr '>' expr               { $$ = fmt.Sprintf("%v %v great", $1, $3) }
+	|   expr '<' expr               { $$ = fmt.Sprintf("%v %v less", $1, $3) }
 	|   expr T_EQ expr           	{ $$ = fmt.Sprintf("%v %v equl", $1, $3) }
 	|  	'!' expr           			{ $$ = fmt.Sprintf("%v not", $2) }
-	|   expr T_AND expr           	{ $$ = fmt.Sprintf("%v %v and_b", $1, $3) }
-	|   expr T_OR expr           	{ $$ = fmt.Sprintf("%v %v or_b", $1, $3) }
+	|   expr T_AND expr           	{ $$ = fmt.Sprintf("%v %v and", $1, $3) }
+	|   expr T_OR expr           	{ $$ = fmt.Sprintf("%v %v or", $1, $3) }
+	|   expr T_XOR expr           	{ $$ = fmt.Sprintf("%v %v xor", $1, $3) }
 	|	T_TRUE						{ $$ = "1" }
 	|	T_FALSE						{ $$ = "0" }
 	|	T_NULL						{ $$ = "nop" }

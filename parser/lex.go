@@ -1,4 +1,4 @@
-package dolang
+package parser
 
 import (
 	"bytes"
@@ -24,6 +24,9 @@ var reserved_words = map[string]int{
 	"then":   T_THEN,
 	"true":   T_TRUE,
 	"false":  T_FALSE,
+	"&&":     T_AND,
+	"||":     T_OR,
+	"^|":     T_XOR,
 	">=":     T_GE,
 	"<=":     T_LE,
 	"==":     T_EQ,
@@ -34,12 +37,6 @@ var reserved_words = map[string]int{
 	"var":    T_VAR,
 	"null":   T_NULL,
 	"__do__": T_DO,
-}
-
-func Parse(input []byte) error {
-	l := newLex(input)
-	_ = DolangParse(l)
-	return l.err
 }
 
 type lex struct {

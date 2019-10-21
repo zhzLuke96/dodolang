@@ -1,6 +1,7 @@
-package dolang
+package parser
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -44,4 +45,10 @@ func (l *LabelStack) BEG() int {
 
 func (l *LabelStack) END() {
 	l.Top--
+}
+
+var argRegex = regexp.MustCompile(" arg")
+
+func argCount(t string) int {
+	return len(argRegex.FindAllString(t, -1))
 }

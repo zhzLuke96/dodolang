@@ -1,65 +1,65 @@
-package dodolang
+package dolang
 
 var (
-	InputContent = ""
+	InputContent = []byte{}
 	scannerPos   = 0
-	EOF          = "\000"
+	EOF          = byte('\000')
 )
 
-func nxtCh() string {
+func nxtCh() byte {
 	if scannerPos == len(InputContent) {
 		return EOF
 	}
 	scannerPos++
-	return string(InputContent[scannerPos-1])
+	return InputContent[scannerPos-1]
 }
 
-func escape(ch string) string {
+func escape(ch byte) byte {
 	switch ch {
-	case "n":
-		return "\n"
-	case "t":
-		return "\t"
-	case "r":
-		return "\r"
+	case 'n':
+		return '\n'
+	case 't':
+		return '\t'
+	case 'r':
+		return '\r'
 	default:
 		return ch
 	}
 }
 
-func Scan() string {
-	NxtToken := ""
+func Scan() []byte {
+	NxtToken := []byte{}
 	stringMod := false
-	stringMatch := ""
+	stringMatch := byte(0)
 
 	for {
 		ch := nxtCh()
 		if ch == EOF {
 			break
 		}
-		if !stringMod && (ch == " " || ch == "\n" || ch == "\r" || ch == "\t") {
+		if !stringMod && (ch == ' ' || ch == '\n' || ch == '\r' || ch == '\t') {
 			if len(NxtToken) == 0 {
 				continue
 			}
 			break
-		} else if ch == "\\" {
-			NxtToken += escape(nxtCh())
-		} else if !stringMod && (ch == "'" || ch == "\"") {
+		} else if ch == '\\' {
+			NxtToken = append(NxtToken, escape(nxtCh()))
+		} else if !stringMod && (ch == '\'' || ch == '"') {
 			stringMatch = ch
 			stringMod = true
-			NxtToken += ch
+			NxtToken = append(NxtToken, ch)
 		} else if stringMod && ch == stringMatch {
 			stringMod = false
-			NxtToken += ch
+			NxtToken = append(NxtToken, ch)
 		} else {
-			NxtToken += ch
+			NxtToken = append(NxtToken, ch)
 		}
 	}
 	return NxtToken
 }
 
-func GetTokenArr() []string {
-	ret := []string{}
+func GetTokenArr() [][]byte {
+	ret := [][]byte{}
 	scannerPos = 0
 	for {
 		t := Scan()
@@ -69,4 +69,9 @@ func GetTokenArr() []string {
 		ret = append(ret, t)
 	}
 	return ret
+}
+
+func Tokenizer(code []byte) [][]byte {
+	InputContent = code
+	return GetTokenArr()
 }

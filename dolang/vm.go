@@ -1,113 +1,126 @@
-package dodolang
+package dolang
 
-type Program struct {
-	Code []string
-	Env  *VMEnv
-	PC   int
+import (
+	"fmt"
+	"time"
+
+	"./bignum"
+)
+
+type stackFrame struct {
+	SuperFrame *stackFrame
+	Function   *doProgram
 }
 
-func (p Program) Expr() string {
-	return p.Code[p.PC]
-}
-
-func (p Program) Clone() *Program {
-	return &Program{p.Code, NewVMEnv(p.Env.Super), 0}
-}
-
-type StackFrame struct {
-	SuperFrame *StackFrame
-	Func       *Program
-}
-
-func NewStackFrame(sf *StackFrame, fn *Program) *StackFrame {
-	return &StackFrame{
-		SuperFrame: sf,
-		Func:       fn,
+func newStackFrame(ssf *stackFrame, fn *doProgram) *stackFrame {
+	return &stackFrame{
+		SuperFrame: ssf,
+		Function:   fn,
 	}
 }
 
-type VMEnv struct {
-	Table map[string]interface{}
-	Super *VMEnv
+type doVM struct {
+	Data         *dataStack
+	CurrentFrame *stackFrame
+	Scheduler    *doScheduler
+	WordSet      *vmWordSet
 }
 
-func NewVMEnv(super *VMEnv) *VMEnv {
-	return &VMEnv{
-		Table: make(map[string]interface{}),
-		Super: super,
+func NewVM(code [][]byte) *doVM {
+	return &doVM{
+		Data:         newDataStack(),
+		CurrentFrame: newStackFrame(nil, &doProgram{code, newCtx(nil), 0, nil}),
+		Scheduler:    newDoScheduler(),
+		WordSet:      gDictionary,
 	}
 }
 
-func (v *VMEnv) get(key string) (interface{}, bool) {
-	if _, ok := v.Table[key]; !ok {
-		if v.Super == nil {
-			return nil, false
+func (vm *doVM) CurProgram() *doProgram {
+	return vm.CurrentFrame.Function
+}
+
+func (vm *doVM) CurExpr() []byte {
+	return vm.CurProgram().Expr()
+}
+
+func (vm *doVM) Run() {
+	for {
+		if vm.CurrentFrame == nil {
+			if !vm.Scheduler.Empty() {
+				vm.CurrentFrame = vm.Scheduler.Dequeue()
+				continue
+			}
+			if vm.Scheduler.BlockCounter != 0 {
+				time.Sleep(time.Millisecond * 100)
+				continue
+			}
+			break
 		}
-		return v.Super.get(key)
+		program := vm.CurProgram()
+		if program.PC == len(program.Code) {
+			if !vm.Scheduler.Empty() {
+				vm.CurrentFrame = vm.Scheduler.Dequeue()
+				continue
+			}
+			if vm.Scheduler.BlockCounter != 0 {
+				time.Sleep(time.Millisecond * 100)
+				continue
+			}
+			if vm.CurrentFrame.SuperFrame != nil {
+				// If the program does not return normally at
+				// last, the stack frame is automatically judged.
+				// If the execution stack is not empty,
+				// the stack will continue execution.
+				vm.CurrentFrame = vm.CurrentFrame.SuperFrame
+				continue
+			}
+			break
+		}
+		// eval expr
+		vm.Eval(vm.CurExpr())
+		program.PC++
 	}
-	return v.Table[key], true
+	if !vm.Scheduler.Empty() {
+		vm.Run()
+	}
 }
 
-func (v *VMEnv) set(key string, val interface{}, init bool) {
-	if init {
-		v.Table[key] = val
+func (vm *doVM) CallProgram(fn *doProgram) {
+	if fn == nil {
 		return
 	}
-	if _, ok := v.Table[key]; ok {
-		v.Table[key] = val
-	} else if !v.setScope(key, val) {
-		v.Table[key] = val
+	if fn.Native != nil {
+		fn.Native(vm)
 	}
+	vm.CurrentFrame = newStackFrame(vm.CurrentFrame, fn)
 }
 
-func (v *VMEnv) setScope(key string, val interface{}) bool {
-	if _, ok := v.Table[key]; ok {
-		v.Table[key] = val
-		return true
-	} else if v.Super != nil {
-		return v.Super.setScope(key, val)
-	}
-	return false
+func (vm *doVM) matchMethod(expr []byte) (nativeFunc, bool) {
+	return vm.WordSet.Get(string(expr))
 }
 
-func (v *VMEnv) setUpper(key string, val interface{}) {
-	if v.Super == nil {
-		// v.Table[key] = val
+func (vm *doVM) Eval(expr []byte) {
+	if isDoString(expr) {
+		vm.Data.Push(doStr(expr[1 : len(expr)-1]))
 		return
 	}
-	v.Super.set(key, val, true)
-}
-
-type dodoVM struct {
-	Data         Stack
-	CurrentFrame *StackFrame
-}
-
-func NewDodoVM(code []string) *dodoVM {
-	return &dodoVM{
-		Data:         Stack{},
-		CurrentFrame: NewStackFrame(nil, &Program{code, NewVMEnv(nil), 0}),
+	if isDoNumber(expr) {
+		vm.Data.Push(doNum(*bignum.Eval(string(expr))))
+		return
 	}
-}
-
-func (f *dodoVM) Pop() interface{} {
-	v, err := f.Data.Pop()
-	if err != nil {
-		return nil
+	if m, ok := vm.matchMethod(expr); ok {
+		m(vm)
+		return
 	}
-	return v
+	fmt.Printf("[LOG] Unkonw expr [%v]\n", expr)
+	// vm.Data.Push(doData(expr))
 }
 
-func (f *dodoVM) Push(v interface{}) {
-	f.Data.Push(v)
-}
-
-func (f *dodoVM) Top() interface{} {
-	val, _ := f.Data.Top()
-	return val
-}
-
-func (f *dodoVM) Run() {
-	r := Runner{f}
-	r.Run()
+func (vm *doVM) DispatchTask(sf *stackFrame) {
+	if vm.Scheduler.Empty() {
+		vm.CurrentFrame = sf
+		return
+	}
+	vm.CurrentFrame = vm.Scheduler.Dequeue()
+	vm.Scheduler.Eequeue(sf)
 }

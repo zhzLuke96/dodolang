@@ -1,11 +1,12 @@
-![dodo bird](https://upload.wikimedia.org/wikipedia/commons/9/9b/Frohawk_Dodo.png)
+![dodo bird](./docs/Frohawk_Dodo.png)
+
 # dodolang
 ![LICENSE badge](https://img.shields.io/badge/license-GPL3.0-blue)
 ![build badge](https://img.shields.io/badge/build-error-red)
+
 > Program <==> Data
 
 🛸Do What U Want To Do.
-
 
 # Overview
 📑Game Engine Internal Script.
@@ -18,6 +19,7 @@
 - [Build](#build)
 - [Usage](#usage)
 - [Changelog](#changelog)
+- [Todo](#todo)
 - [LICENSE](#license)
 
 # Install
@@ -62,8 +64,19 @@ main()
 ```
 
 # Changelog
-- rename to dolang & dodolang
-- Reorganization working directory
+- 重构
+- 数据类型基于bytes
+- Skiplist based
+- Big Number (coverage 80%+)
+- simple coroutines
+- map of scratch
+
+# Todo
+- array of scratch
+- parameter-changeable
+- new parser for new dolang
+- bytescode
+- compile .wasm file
 
 # LICENSE
 GPL-3.0

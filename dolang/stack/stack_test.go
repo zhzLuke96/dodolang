@@ -1,4 +1,4 @@
-package dodolang
+package stack
 
 import (
 	"testing"

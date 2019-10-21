@@ -2,6 +2,7 @@
 # go get github.com/zhzluke96/dodolang/dolang
 # go get github.com/zhzluke96/dodolang/dodolang
 
+
 cd $(go env GOPATH)/src/github.com/zhzluke96/dodolang/dodolang/
 ./build.sh
 

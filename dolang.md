@@ -19,7 +19,7 @@ hello world
 ```
 
 ```
->>> "square" func dup mul ret endfunc store
+>>> "square" func dup mul ret endfunc set
 >>> 12 square print
 144
 ```
@@ -29,21 +29,21 @@ hello world
 "main" func 
 	"count1"
 	"counter" call
-	store
+	set
 	"count2"
 	"counter" call
-	store
+	set
 
 	"count1" call println
 	"count1" call println
 	"count2" call println
-endfunc store
+endfunc set
 
 "counter" func
-	"count" 0 store
-	func "count" load 1 add dup "count" swap storev ret endfunc
+	"count" 0 set
+	func "count" get 1 add dup "count" swap set ret endfunc
 	ret
-endfunc store
+endfunc set
 
 "main" call
 ```
@@ -64,11 +64,11 @@ endfunc store
 	
 	"sub" func 
 		"hello world" println ret
-	endfunc store
+	endfunc set
 	&& jmp
 	"sub" call
 	ret
-endfunc store
+endfunc set
 
 "main" call
 ```
@@ -78,23 +78,23 @@ endfunc store
 "newMap" func 
 	func 
 		"val" arg "key" arg "opt" arg
-		"opt" load "get" strEqul 0 &set equljmp
-		"key" load load ret
+		"opt" get "get" strEqul 0 &set equljmp
+		"key" get get ret
 		set:
-		"opt" load "set" strEqul 0 &end equljmp
-		"key" load "val" load stores
+		"opt" get "set" strEqul 0 &end equljmp
+		"key" get "val" get set
 		end: ret
 	endfunc
 	ret 
-endfunc store
+endfunc set
 
 "main" func
-	"map1" newMap store
-	"set" "name" "alice" "map1" load call
+	"map1" newMap set
+	"set" "name" "alice" "map1" get call
 	"set" "age" 20 "map1" call
 	"get" "name" nop "map1" call println
 	"get" "age" nop "map1" call println
-endfunc store
+endfunc set
 
 "main" call
 ```
