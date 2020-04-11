@@ -18,6 +18,7 @@
 - [Install](#install)
 - [Build](#build)
 - [Usage](#usage)
+- [Awesome](#awesome)
 - [Changelog](#changelog)
 - [Todo](#todo)
 - [LICENSE](#license)
@@ -63,20 +64,45 @@ func main(){
 main()
 ```
 
+# Awesome
+```go
+var Y,F
+Y = func(f){
+    (func(x) {
+        x(x)
+    })(func(x){
+        f(func(y){
+            x(x)(y)
+        })
+    })
+}
+
+
+F = func(g){
+    func(n){
+        if n == 0 {
+            return 1
+        } else {
+            return n * g(n-1)
+        }
+    }
+}
+
+FACT = Y(F)
+FACT(5) // =>  120
+```
+
 # Changelog
-- 重构
-- 数据类型基于bytes
-- Skiplist based
-- Big Number (coverage 80%+)
-- simple coroutines
-- map of scratch
+- 理了一下
 
 # Todo
+- debugger
 - array of scratch
 - parameter-changeable
 - new parser for new dolang
 - bytescode
 - compile .wasm file
+- 简化grammer，理想的样子是js的语义+python的运行时类型推导+rust的卫生宏
 
 # LICENSE
 GPL-3.0
